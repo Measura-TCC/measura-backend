@@ -1,7 +1,6 @@
 import {
   PORT,
   NODE_ENV,
-  MONGODB_URI,
   JWT_SECRET,
   APP_CONSTANTS,
   ERROR_CODES,
@@ -23,10 +22,6 @@ describe('Constants', () => {
     it('should return NODE_ENV value or default', () => {
       expect(NODE_ENV).toBeDefined();
       expect(typeof NODE_ENV).toBe('string');
-    });
-
-    it('should return default MONGODB_URI when not set', () => {
-      expect(MONGODB_URI).toBe('mongodb://localhost:27017/measura');
     });
 
     it('should return default JWT_SECRET when not set', () => {

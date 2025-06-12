@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="47" failures="0" errors="0" time="1.947">
-  <testsuite name="Constants" errors="0" failures="0" skipped="0" timestamp="2025-06-12T21:56:31" time="1.418" tests="13">
-    <testcase classname="Constants Environment Variables should return default port when PORT env is not set" name="Constants Environment Variables should return default port when PORT env is not set" time="0.001">
+<testsuites name="jest tests" tests="46" failures="0" errors="0" time="2.317">
+  <testsuite name="Constants" errors="0" failures="0" skipped="0" timestamp="2025-06-12T23:08:50" time="1.742" tests="12">
+    <testcase classname="Constants Environment Variables should return default port when PORT env is not set" name="Constants Environment Variables should return default port when PORT env is not set" time="0.002">
     </testcase>
     <testcase classname="Constants Environment Variables should return NODE_ENV value or default" name="Constants Environment Variables should return NODE_ENV value or default" time="0">
-    </testcase>
-    <testcase classname="Constants Environment Variables should return default MONGODB_URI when not set" name="Constants Environment Variables should return default MONGODB_URI when not set" time="0">
     </testcase>
     <testcase classname="Constants Environment Variables should return default JWT_SECRET when not set" name="Constants Environment Variables should return default JWT_SECRET when not set" time="0">
     </testcase>
@@ -17,9 +15,9 @@
     </testcase>
     <testcase classname="Constants APP_CONSTANTS should have correct cache TTL values" name="Constants APP_CONSTANTS should have correct cache TTL values" time="0">
     </testcase>
-    <testcase classname="Constants ERROR_CODES should have all required error codes" name="Constants ERROR_CODES should have all required error codes" time="0">
+    <testcase classname="Constants ERROR_CODES should have all required error codes" name="Constants ERROR_CODES should have all required error codes" time="0.004">
     </testcase>
-    <testcase classname="Constants ERROR_CODES should have authentication error codes" name="Constants ERROR_CODES should have authentication error codes" time="0">
+    <testcase classname="Constants ERROR_CODES should have authentication error codes" name="Constants ERROR_CODES should have authentication error codes" time="0.001">
     </testcase>
     <testcase classname="Constants ERROR_CODES should have business logic error codes" name="Constants ERROR_CODES should have business logic error codes" time="0">
     </testcase>
@@ -28,7 +26,7 @@
     <testcase classname="Constants HTTP_STATUS_MESSAGES should have correct error status messages" name="Constants HTTP_STATUS_MESSAGES should have correct error status messages" time="0">
     </testcase>
   </testsuite>
-  <testsuite name="ValidationUtils" errors="0" failures="0" skipped="0" timestamp="2025-06-12T21:56:31" time="1.55" tests="17">
+  <testsuite name="ValidationUtils" errors="0" failures="0" skipped="0" timestamp="2025-06-12T23:08:50" time="1.9" tests="17">
     <testcase classname="ValidationUtils isValidEmail should return true for valid email addresses" name="ValidationUtils isValidEmail should return true for valid email addresses" time="0.002">
     </testcase>
     <testcase classname="ValidationUtils isValidEmail should return false for invalid email addresses" name="ValidationUtils isValidEmail should return false for invalid email addresses" time="0.001">
@@ -39,9 +37,9 @@
     </testcase>
     <testcase classname="ValidationUtils isValidObjectId should return true for valid MongoDB ObjectIds" name="ValidationUtils isValidObjectId should return true for valid MongoDB ObjectIds" time="0">
     </testcase>
-    <testcase classname="ValidationUtils isValidObjectId should return false for invalid ObjectIds" name="ValidationUtils isValidObjectId should return false for invalid ObjectIds" time="0">
+    <testcase classname="ValidationUtils isValidObjectId should return false for invalid ObjectIds" name="ValidationUtils isValidObjectId should return false for invalid ObjectIds" time="0.001">
     </testcase>
-    <testcase classname="ValidationUtils sanitizeString should remove dangerous characters and trim whitespace" name="ValidationUtils sanitizeString should remove dangerous characters and trim whitespace" time="0.001">
+    <testcase classname="ValidationUtils sanitizeString should remove dangerous characters and trim whitespace" name="ValidationUtils sanitizeString should remove dangerous characters and trim whitespace" time="0">
     </testcase>
     <testcase classname="ValidationUtils sanitizeString should handle empty strings" name="ValidationUtils sanitizeString should handle empty strings" time="0">
     </testcase>
@@ -55,7 +53,7 @@
     </testcase>
     <testcase classname="ValidationUtils isWithinRange should return true for values within range" name="ValidationUtils isWithinRange should return true for values within range" time="0">
     </testcase>
-    <testcase classname="ValidationUtils isWithinRange should return false for values outside range" name="ValidationUtils isWithinRange should return false for values outside range" time="0">
+    <testcase classname="ValidationUtils isWithinRange should return false for values outside range" name="ValidationUtils isWithinRange should return false for values outside range" time="0.001">
     </testcase>
     <testcase classname="ValidationUtils generateRandomString should generate string of correct length" name="ValidationUtils generateRandomString should generate string of correct length" time="0">
     </testcase>
@@ -64,20 +62,20 @@
     <testcase classname="ValidationUtils generateRandomString should only contain alphanumeric characters" name="ValidationUtils generateRandomString should only contain alphanumeric characters" time="0">
     </testcase>
   </testsuite>
-  <testsuite name="ValidationUtils" errors="0" failures="0" skipped="0" timestamp="2025-06-12T21:56:31" time="1.556" tests="12">
-    <testcase classname="ValidationUtils validateEmail should return true for valid email addresses" name="ValidationUtils validateEmail should return true for valid email addresses" time="0.002">
+  <testsuite name="ValidationUtils" errors="0" failures="0" skipped="0" timestamp="2025-06-12T23:08:50" time="1.906" tests="12">
+    <testcase classname="ValidationUtils validateEmail should return true for valid email addresses" name="ValidationUtils validateEmail should return true for valid email addresses" time="0.003">
     </testcase>
     <testcase classname="ValidationUtils validateEmail should return false for invalid email addresses" name="ValidationUtils validateEmail should return false for invalid email addresses" time="0">
     </testcase>
-    <testcase classname="ValidationUtils validatePassword should not throw for valid passwords" name="ValidationUtils validatePassword should not throw for valid passwords" time="0.001">
+    <testcase classname="ValidationUtils validatePassword should not throw for valid passwords" name="ValidationUtils validatePassword should not throw for valid passwords" time="0">
     </testcase>
-    <testcase classname="ValidationUtils validatePassword should throw for password shorter than 8 characters" name="ValidationUtils validatePassword should throw for password shorter than 8 characters" time="0.005">
+    <testcase classname="ValidationUtils validatePassword should throw for password shorter than 8 characters" name="ValidationUtils validatePassword should throw for password shorter than 8 characters" time="0.006">
     </testcase>
-    <testcase classname="ValidationUtils validatePassword should throw for password without uppercase letter" name="ValidationUtils validatePassword should throw for password without uppercase letter" time="0">
+    <testcase classname="ValidationUtils validatePassword should throw for password without uppercase letter" name="ValidationUtils validatePassword should throw for password without uppercase letter" time="0.001">
     </testcase>
     <testcase classname="ValidationUtils validatePassword should throw for password without lowercase letter" name="ValidationUtils validatePassword should throw for password without lowercase letter" time="0">
     </testcase>
-    <testcase classname="ValidationUtils validatePassword should throw for password without number" name="ValidationUtils validatePassword should throw for password without number" time="0.001">
+    <testcase classname="ValidationUtils validatePassword should throw for password without number" name="ValidationUtils validatePassword should throw for password without number" time="0">
     </testcase>
     <testcase classname="ValidationUtils validatePassword should throw for password without special character" name="ValidationUtils validatePassword should throw for password without special character" time="0">
     </testcase>
@@ -87,21 +85,21 @@
     </testcase>
     <testcase classname="ValidationUtils validateDate should return true for valid dates" name="ValidationUtils validateDate should return true for valid dates" time="0">
     </testcase>
-    <testcase classname="ValidationUtils validateDate should return false for invalid dates" name="ValidationUtils validateDate should return false for invalid dates" time="0">
+    <testcase classname="ValidationUtils validateDate should return false for invalid dates" name="ValidationUtils validateDate should return false for invalid dates" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-06-12T21:56:31" time="1.649" tests="2">
-    <testcase classname="AppController healthCheck should return health status object" name="AppController healthCheck should return health status object" time="0.005">
+  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-06-12T23:08:50" time="2.018" tests="3">
+    <testcase classname="AppController healthCheck should return health status" name="AppController healthCheck should return health status" time="0.006">
     </testcase>
-    <testcase classname="AppController getVersion should return version information" name="AppController getVersion should return version information" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-06-12T21:56:31" time="1.65" tests="3">
-    <testcase classname="AppController healthCheck should return health status" name="AppController healthCheck should return health status" time="0.005">
-    </testcase>
-    <testcase classname="AppController getVersion should return version information with default values" name="AppController getVersion should return version information with default values" time="0.002">
+    <testcase classname="AppController getVersion should return version information with default values" name="AppController getVersion should return version information with default values" time="0.001">
     </testcase>
     <testcase classname="AppController getVersion should return custom version and environment from env variables" name="AppController getVersion should return custom version and environment from env variables" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-06-12T23:08:50" time="2.019" tests="2">
+    <testcase classname="AppController healthCheck should return health status object" name="AppController healthCheck should return health status object" time="0.006">
+    </testcase>
+    <testcase classname="AppController getVersion should return version information" name="AppController getVersion should return version information" time="0.002">
     </testcase>
   </testsuite>
 </testsuites>
