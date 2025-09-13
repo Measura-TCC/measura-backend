@@ -13,5 +13,7 @@
     "^@infrastructure/(.*)$": "<rootDir>/../src/infrastructure/$1",
     "^@controllers/(.*)$": "<rootDir>/../src/controllers/$1",
     "^@shared/(.*)$": "<rootDir>/../src/shared/$1"
-  }
+  },
+  "forceExit": true,
+  "detectOpenHandles": true
 }

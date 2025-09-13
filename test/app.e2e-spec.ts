@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '@app/app.module';
 import { ConfigService } from '@nestjs/config';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 
 interface HealthCheckResponse {
   status: 'ok';
@@ -21,12 +23,12 @@ jest.setTimeout(60000); // Set global timeout to 60 seconds
 
 describe('API Health Check (e2e)', () => {
   let app: INestApplication;
+  let moduleFixture: TestingModule;
 
   beforeAll(async () => {
-    // Use environment variables from Azure
     process.env.MONGODB_URI =
       process.env.MONGODB_URI || 'mongodb://localhost:27017/measura';
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(ConfigService)
@@ -45,7 +47,26 @@ describe('API Health Check (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    try {
+      const connection = moduleFixture.get<Connection>(getConnectionToken());
+      if (connection) {
+        await connection.close();
+      }
+    } catch (error) {
+      console.warn('Warning: Could not close MongoDB connection:', error);
+    }
+
+    if (app) {
+      await app.close();
+    }
+
+    if (moduleFixture) {
+      await moduleFixture.close();
+    }
+
+    if (global.gc) {
+      global.gc();
+    }
   });
 
   describe('Health Check', () => {
