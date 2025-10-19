@@ -77,10 +77,4 @@ export class ProjectRepository implements IProjectRepository {
       .find({ createdBy: new Types.ObjectId(userId) })
       .exec();
   }
-
-  async findByTeamMember(userId: string): Promise<Project[]> {
-    return this.projectModel
-      .find({ teamMembers: new Types.ObjectId(userId) })
-      .exec();
-  }
 }

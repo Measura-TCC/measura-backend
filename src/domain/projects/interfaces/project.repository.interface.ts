@@ -11,5 +11,4 @@ export interface IProjectRepository {
   update(id: string, project: Partial<Project>): Promise<Project | null>;
   delete(id: string): Promise<boolean>;
   findByCreatedBy(userId: string): Promise<Project[]>;
-  findByTeamMember(userId: string): Promise<Project[]>;
 }

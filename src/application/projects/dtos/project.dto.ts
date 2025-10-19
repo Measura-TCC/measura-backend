@@ -53,13 +53,6 @@ export class ProjectDto {
   endDate: Date;
 
   @ApiProperty({
-    description: 'Team members assigned to the project',
-    type: [UserDto],
-  })
-  @Type(() => UserDto)
-  teamMembers: UserDto[];
-
-  @ApiProperty({
     description: 'The date when the project was created',
     example: '2023-01-01T00:00:00.000Z',
   })
