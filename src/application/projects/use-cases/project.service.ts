@@ -64,8 +64,6 @@ export class ProjectService {
       ...createProjectDto,
       createdBy: new Types.ObjectId(createdBy),
       organizationId: new Types.ObjectId(createProjectDto.organizationId),
-      teamMembers:
-        createProjectDto.teamMembers?.map((id) => new Types.ObjectId(id)) || [],
       objectives,
     };
 
@@ -118,11 +116,6 @@ export class ProjectService {
     if (updateProjectDto.organizationId) {
       updateData.organizationId = new Types.ObjectId(
         updateProjectDto.organizationId,
-      );
-    }
-    if (updateProjectDto.teamMembers) {
-      updateData.teamMembers = updateProjectDto.teamMembers.map(
-        (id) => new Types.ObjectId(id),
       );
     }
 

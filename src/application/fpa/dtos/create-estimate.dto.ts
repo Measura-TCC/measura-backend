@@ -13,8 +13,11 @@ import {
   ArrayMinSize,
   IsEnum,
   IsPositive,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { CountType } from '@domain/fpa/entities/estimate.entity';
+import { RequirementWithFpaDataDto } from './requirement/requirement-with-fpa-data.dto';
 
 export class CreateEstimateDto {
   @ApiProperty({
@@ -138,9 +141,40 @@ export class CreateEstimateDto {
 
   @ApiProperty({
     description:
-      'Array of Internal Logical File identifiers to include in estimate',
+      'RECOMMENDED: Requirements-first approach (IFPUG-compliant). Create estimate from classified requirements with complete FPA data.',
+    type: [RequirementWithFpaDataDto],
+    required: false,
+    example: [
+      {
+        title: 'User login functionality',
+        description: 'System must allow user authentication',
+        source: 'jira',
+        sourceReference: 'PROJ-123',
+        componentType: 'EI',
+        fpaData: {
+          name: 'Login Transaction',
+          description: 'User authentication transaction',
+          fileTypesReferenced: 2,
+          dataElementTypes: 8,
+          primaryIntent: 'Authenticate users and create session',
+          processingLogic:
+            'Validate credentials, check account status, create session token',
+        },
+      },
+    ],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RequirementWithFpaDataDto)
+  requirements?: RequirementWithFpaDataDto[];
+
+  @ApiProperty({
+    description:
+      'DEPRECATED: Use requirements[] instead. Array of Internal Logical File identifiers to include in estimate.',
     type: [String],
     required: false,
+    deprecated: true,
   })
   @IsOptional()
   @IsArray()
@@ -150,9 +184,10 @@ export class CreateEstimateDto {
 
   @ApiProperty({
     description:
-      'Array of External Interface File identifiers to include in estimate',
+      'DEPRECATED: Use requirements[] instead. Array of External Interface File identifiers.',
     type: [String],
     required: false,
+    deprecated: true,
   })
   @IsOptional()
   @IsArray()
@@ -161,9 +196,11 @@ export class CreateEstimateDto {
   externalInterfaceFiles?: string[];
 
   @ApiProperty({
-    description: 'Array of External Input identifiers to include in estimate',
+    description:
+      'DEPRECATED: Use requirements[] instead. Array of External Input identifiers.',
     type: [String],
     required: false,
+    deprecated: true,
   })
   @IsOptional()
   @IsArray()
@@ -172,9 +209,11 @@ export class CreateEstimateDto {
   externalInputs?: string[];
 
   @ApiProperty({
-    description: 'Array of External Output identifiers to include in estimate',
+    description:
+      'DEPRECATED: Use requirements[] instead. Array of External Output identifiers.',
     type: [String],
     required: false,
+    deprecated: true,
   })
   @IsOptional()
   @IsArray()
@@ -183,9 +222,11 @@ export class CreateEstimateDto {
   externalOutputs?: string[];
 
   @ApiProperty({
-    description: 'Array of External Query identifiers to include in estimate',
+    description:
+      'DEPRECATED: Use requirements[] instead. Array of External Query identifiers.',
     type: [String],
     required: false,
+    deprecated: true,
   })
   @IsOptional()
   @IsArray()

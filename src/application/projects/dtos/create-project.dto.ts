@@ -97,17 +97,6 @@ export class CreateProjectDto {
   endDate?: Date;
 
   @ApiProperty({
-    description: 'Team members assigned to the project',
-    example: ['60a1e2c7b9b5a50d944b1e35', '60a1e2c7b9b5a50d944b1e36'],
-    required: false,
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(50)
-  teamMembers?: string[];
-
-  @ApiProperty({
     description: 'Project objectives',
     type: [CreateProjectObjectiveDto],
     required: false,

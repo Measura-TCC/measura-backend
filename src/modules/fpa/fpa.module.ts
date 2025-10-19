@@ -11,6 +11,10 @@ import {
   DocumentEntity,
   DocumentEntitySchema,
 } from '@domain/fpa/entities/document.entity';
+import {
+  Requirement,
+  RequirementSchema,
+} from '@domain/fpa/entities/requirement.entity';
 
 import { ALIRepository } from '@infrastructure/repositories/fpa/ali.repository';
 import { AIERepository } from '@infrastructure/repositories/fpa/aie.repository';
@@ -19,6 +23,7 @@ import { EORepository } from '@infrastructure/repositories/fpa/eo.repository';
 import { EQRepository } from '@infrastructure/repositories/fpa/eq.repository';
 import { EstimateRepository } from '@infrastructure/repositories/fpa/estimate.repository';
 import { DocumentRepository } from '@infrastructure/repositories/fpa/document.repository';
+import { RequirementRepository } from '@infrastructure/repositories/fpa/requirement.repository';
 
 import { ALI_REPOSITORY } from '@domain/fpa/interfaces/ali.repository.interface';
 import { AIE_REPOSITORY } from '@domain/fpa/interfaces/aie.repository.interface';
@@ -27,6 +32,7 @@ import { EO_REPOSITORY } from '@domain/fpa/interfaces/eo.repository.interface';
 import { EQ_REPOSITORY } from '@domain/fpa/interfaces/eq.repository.interface';
 import { ESTIMATE_REPOSITORY } from '@domain/fpa/interfaces/estimate.repository.interface';
 import { DOCUMENT_REPOSITORY } from '@domain/fpa/interfaces/document.repository.interface';
+import { REQUIREMENT_REPOSITORY } from '@domain/fpa/interfaces/requirement.repository.interface';
 
 import { ComplexityCalculator } from '@domain/fpa/services/complexity-calculator.service';
 import { FunctionPointCalculator } from '@domain/fpa/services/function-point-calculator.service';
@@ -48,6 +54,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
       { name: EQ.name, schema: EQSchema },
       { name: Estimate.name, schema: EstimateSchema },
       { name: DocumentEntity.name, schema: DocumentEntitySchema },
+      { name: Requirement.name, schema: RequirementSchema },
     ]),
     ProjectsModule,
   ],
@@ -81,6 +88,10 @@ import { ProjectsModule } from '@modules/projects/projects.module';
       provide: DOCUMENT_REPOSITORY,
       useClass: DocumentRepository,
     },
+    {
+      provide: REQUIREMENT_REPOSITORY,
+      useClass: RequirementRepository,
+    },
     ComplexityCalculator,
     FunctionPointCalculator,
     TrendAnalysisService,
@@ -98,6 +109,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
     EQ_REPOSITORY,
     ESTIMATE_REPOSITORY,
     DOCUMENT_REPOSITORY,
+    REQUIREMENT_REPOSITORY,
     ComplexityCalculator,
     FunctionPointCalculator,
     TrendAnalysisService,

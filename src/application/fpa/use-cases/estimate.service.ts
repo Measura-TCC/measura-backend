@@ -14,6 +14,37 @@ import { Estimate, EstimateStatus } from '@domain/fpa/entities/estimate.entity';
 import { CreateEstimateDto } from '../dtos/create-estimate.dto';
 import { UpdateEstimateDto } from '../dtos/update-estimate.dto';
 import { ProjectService } from '@application/projects/use-cases/project.service';
+import {
+  REQUIREMENT_REPOSITORY,
+  IRequirementRepository,
+} from '@domain/fpa/interfaces/requirement.repository.interface';
+import {
+  ALI_REPOSITORY,
+  IALIRepository,
+} from '@domain/fpa/interfaces/ali.repository.interface';
+import {
+  AIE_REPOSITORY,
+  IAIERepository,
+} from '@domain/fpa/interfaces/aie.repository.interface';
+import {
+  EI_REPOSITORY,
+  IEIRepository,
+} from '@domain/fpa/interfaces/ei.repository.interface';
+import {
+  EO_REPOSITORY,
+  IEORepository,
+} from '@domain/fpa/interfaces/eo.repository.interface';
+import {
+  EQ_REPOSITORY,
+  IEQRepository,
+} from '@domain/fpa/interfaces/eq.repository.interface';
+import { ComplexityCalculator } from '@domain/fpa/services/complexity-calculator.service';
+import { RequirementWithFpaDataDto } from '../dtos/requirement/requirement-with-fpa-data.dto';
+import { CreateALIDto } from '../dtos/create-ali.dto';
+import { CreateAIEDto } from '../dtos/create-aie.dto';
+import { CreateEIDto } from '../dtos/create-ei.dto';
+import { CreateEODto } from '../dtos/create-eo.dto';
+import { CreateEQDto } from '../dtos/create-eq.dto';
 
 @Injectable()
 export class EstimateService {
@@ -21,6 +52,18 @@ export class EstimateService {
     @Inject(ESTIMATE_REPOSITORY)
     private readonly estimateRepository: IEstimateRepository,
     private readonly projectService: ProjectService,
+    @Inject(REQUIREMENT_REPOSITORY)
+    private readonly requirementRepository: IRequirementRepository,
+    @Inject(ALI_REPOSITORY)
+    private readonly aliRepository: IALIRepository,
+    @Inject(AIE_REPOSITORY)
+    private readonly aieRepository: IAIERepository,
+    @Inject(EI_REPOSITORY)
+    private readonly eiRepository: IEIRepository,
+    @Inject(EO_REPOSITORY)
+    private readonly eoRepository: IEORepository,
+    @Inject(EQ_REPOSITORY)
+    private readonly eqRepository: IEQRepository,
   ) {}
 
   async create(
@@ -50,7 +93,7 @@ export class EstimateService {
       projectId: new Types.ObjectId(createDto.projectId),
       status: EstimateStatus.DRAFT,
       version: 1,
-      // Convert string arrays to ObjectId arrays
+      // Convert string arrays to ObjectId arrays (legacy approach - deprecated)
       internalLogicalFiles: createDto.internalLogicalFiles?.map(
         (id) => new Types.ObjectId(id),
       ),
@@ -69,6 +112,16 @@ export class EstimateService {
     };
 
     const createdEstimate = await this.estimateRepository.create(estimate);
+
+    // Process requirements-first approach (IFPUG-compliant)
+    if (createDto.requirements && createDto.requirements.length > 0) {
+      await this.createComponentsFromRequirements(
+        createDto.requirements,
+        createdEstimate._id.toString(),
+        organizationId,
+        createDto.projectId,
+      );
+    }
 
     // Auto-link the estimate to the project
     if (createDto.projectId) {
@@ -132,6 +185,166 @@ export class EstimateService {
 
   private roundToTwo(value: number): number {
     return Math.round(value * 100) / 100;
+  }
+
+  /**
+   * Process requirements and create FPA components with bidirectional traceability
+   * This implements the IFPUG-compliant requirements-first workflow
+   */
+  private async createComponentsFromRequirements(
+    requirements: RequirementWithFpaDataDto[],
+    estimateId: string,
+    organizationId: string,
+    projectId: string,
+  ): Promise<void> {
+    const componentIdsByType: {
+      internalLogicalFiles: Types.ObjectId[];
+      externalInterfaceFiles: Types.ObjectId[];
+      externalInputs: Types.ObjectId[];
+      externalOutputs: Types.ObjectId[];
+      externalQueries: Types.ObjectId[];
+    } = {
+      internalLogicalFiles: [],
+      externalInterfaceFiles: [],
+      externalInputs: [],
+      externalOutputs: [],
+      externalQueries: [],
+    };
+
+    for (const reqDto of requirements) {
+      try {
+        // Step 1: Create the FPA component based on type
+        let componentId: Types.ObjectId | null = null;
+
+        switch (reqDto.componentType) {
+          case 'ALI': {
+            const aliData = reqDto.fpaData as CreateALIDto;
+            const { complexity, functionPoints } =
+              ComplexityCalculator.calculateILFComplexity(
+                aliData.recordElementTypes || 1,
+                aliData.dataElementTypes || 1,
+              );
+            const ali = await this.aliRepository.create({
+              ...aliData,
+              complexity,
+              functionPoints,
+              organizationId: new Types.ObjectId(organizationId),
+              projectId: new Types.ObjectId(projectId),
+            });
+            componentId = ali._id;
+            componentIdsByType.internalLogicalFiles.push(ali._id);
+            break;
+          }
+
+          case 'AIE': {
+            const aieData = reqDto.fpaData as CreateAIEDto;
+            const { complexity, functionPoints } =
+              ComplexityCalculator.calculateEIFComplexity(
+                aieData.recordElementTypes || 1,
+                aieData.dataElementTypes || 1,
+              );
+            const aie = await this.aieRepository.create({
+              ...aieData,
+              complexity,
+              functionPoints,
+              organizationId: new Types.ObjectId(organizationId),
+              projectId: new Types.ObjectId(projectId),
+            });
+            componentId = aie._id;
+            componentIdsByType.externalInterfaceFiles.push(aie._id);
+            break;
+          }
+
+          case 'EI': {
+            const eiData = reqDto.fpaData as CreateEIDto;
+            const { complexity, functionPoints } =
+              ComplexityCalculator.calculateEIComplexity(
+                eiData.fileTypesReferenced || 0,
+                eiData.dataElementTypes || 1,
+              );
+            const ei = await this.eiRepository.create({
+              ...eiData,
+              complexity,
+              functionPoints,
+              organizationId: new Types.ObjectId(organizationId),
+              projectId: new Types.ObjectId(projectId),
+            });
+            componentId = ei._id;
+            componentIdsByType.externalInputs.push(ei._id);
+            break;
+          }
+
+          case 'EO': {
+            const eoData = reqDto.fpaData as CreateEODto;
+            const { complexity, functionPoints } =
+              ComplexityCalculator.calculateEOComplexity(
+                eoData.fileTypesReferenced || 0,
+                eoData.dataElementTypes || 1,
+              );
+            const eo = await this.eoRepository.create({
+              ...eoData,
+              complexity,
+              functionPoints,
+              organizationId: new Types.ObjectId(organizationId),
+              projectId: new Types.ObjectId(projectId),
+            });
+            componentId = eo._id;
+            componentIdsByType.externalOutputs.push(eo._id);
+            break;
+          }
+
+          case 'EQ': {
+            const eqData = reqDto.fpaData as CreateEQDto;
+            const { complexity, functionPoints } =
+              ComplexityCalculator.calculateEQComplexity(
+                eqData.fileTypesReferenced || 0,
+                eqData.dataElementTypes || 1,
+              );
+            const eq = await this.eqRepository.create({
+              ...eqData,
+              complexity,
+              functionPoints,
+              organizationId: new Types.ObjectId(organizationId),
+              projectId: new Types.ObjectId(projectId),
+            });
+            componentId = eq._id;
+            componentIdsByType.externalQueries.push(eq._id);
+            break;
+          }
+
+          default:
+            throw new BadRequestException(
+              `Unknown component type: ${reqDto.componentType}`,
+            );
+        }
+
+        // Step 2: Create the Requirement record with bidirectional link
+        await this.requirementRepository.create({
+          title: reqDto.title,
+          description: reqDto.description,
+          source: reqDto.source,
+          sourceReference: reqDto.sourceReference,
+          componentType: reqDto.componentType,
+          componentId: componentId,
+          estimateId: new Types.ObjectId(estimateId),
+          organizationId: new Types.ObjectId(organizationId),
+          projectId: new Types.ObjectId(projectId),
+        });
+      } catch (error) {
+        throw new BadRequestException(
+          `Failed to create component from requirement "${reqDto.title}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
+    }
+
+    // Step 3: Update the estimate with all component IDs
+    await this.estimateRepository.update(estimateId, {
+      internalLogicalFiles: componentIdsByType.internalLogicalFiles,
+      externalInterfaceFiles: componentIdsByType.externalInterfaceFiles,
+      externalInputs: componentIdsByType.externalInputs,
+      externalOutputs: componentIdsByType.externalOutputs,
+      externalQueries: componentIdsByType.externalQueries,
+    });
   }
 
   async update(
