@@ -26,6 +26,12 @@ export class UserInfoDto {
     example: UserRole.USER,
   })
   role: UserRole;
+
+  @ApiProperty({
+    description: 'Whether the user has completed the onboarding tour',
+    example: false,
+  })
+  hasCompletedOnboarding: boolean;
 }
 
 export class AuthResponseDto {
@@ -64,6 +70,7 @@ export class AuthResponseDto {
         username: user.username,
         email: user.email,
         role: user.role,
+        hasCompletedOnboarding: !!user.hasCompletedOnboarding,
       },
     });
   }

@@ -4,8 +4,10 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -83,6 +85,18 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found.' })
   async findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'The user profile has been successfully updated.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  async updateMe(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    const userId = req.user._id;
+    return this.userService.update(userId, updateUserDto);
   }
 
   @Put(':id')
