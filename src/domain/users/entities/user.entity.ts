@@ -90,6 +90,13 @@ export class User {
   @Prop({ type: Types.ObjectId, ref: 'Organization', required: false })
   organizationId?: Types.ObjectId;
 
+  @ApiProperty({
+    description: 'Whether the user has completed the onboarding tour',
+    default: false,
+  })
+  @Prop({ default: false })
+  hasCompletedOnboarding: boolean;
+
   @ApiProperty({ description: 'The date when the user was created' })
   createdAt: Date;
 

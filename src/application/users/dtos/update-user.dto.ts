@@ -6,6 +6,7 @@ import {
   IsString,
   Matches,
   IsMongoId,
+  IsBoolean,
 } from 'class-validator';
 import { UserRole } from '@domain/users/entities/user.entity';
 import { Types } from 'mongoose';
@@ -56,4 +57,13 @@ export class UpdateUserDto {
   @IsOptional()
   @IsMongoId({ message: 'Organization ID must be a valid MongoDB ObjectId' })
   organizationId?: Types.ObjectId;
+
+  @ApiProperty({
+    description: 'Whether the user has completed the onboarding tour',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'hasCompletedOnboarding must be a boolean' })
+  hasCompletedOnboarding?: boolean;
 }

@@ -17,6 +17,11 @@ export class UserDto {
   @ApiProperty({ description: 'Whether the user email is verified' })
   isEmailVerified: boolean;
 
+  @ApiProperty({
+    description: 'Whether the user has completed the onboarding tour',
+  })
+  hasCompletedOnboarding: boolean;
+
   @ApiProperty({ description: 'User creation date' })
   createdAt: Date;
 
@@ -33,6 +38,7 @@ export class UserDto {
     dto.email = user.email || '';
     dto.role = user.role || UserRole.USER;
     dto.isEmailVerified = !!user.isEmailVerified;
+    dto.hasCompletedOnboarding = !!user.hasCompletedOnboarding;
     dto.createdAt = user.createdAt || new Date();
     dto.updatedAt = user.updatedAt || new Date();
     return dto;
