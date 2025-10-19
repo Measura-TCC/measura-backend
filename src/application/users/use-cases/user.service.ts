@@ -147,9 +147,8 @@ export class UserService {
       throw new BadRequestException('Failed to leave organization');
     }
 
-    const userIdentifier = user.email || user.username;
     const pendingInvitations =
-      await this.invitationRepository.findPendingByUserId(userIdentifier);
+      await this.invitationRepository.findPendingByUserId(userId);
 
     for (const invitation of pendingInvitations) {
       await this.invitationRepository.update(invitation._id.toString(), {
