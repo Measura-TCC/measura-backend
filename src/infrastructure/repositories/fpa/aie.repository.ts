@@ -13,11 +13,12 @@ export class AIERepository implements IAIERepository {
 
   async create(component: Partial<AIE>): Promise<AIE> {
     const createdComponent = new this.aieModel(component);
-    return createdComponent.save();
+    const saved = await createdComponent.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<AIE | null> {
-    return this.aieModel.findById(id).exec();
+    return this.aieModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<AIE[]> {
@@ -36,21 +37,22 @@ export class AIERepository implements IAIERepository {
       return [];
     }
 
-    return this.aieModel.find({ _id: { $in: objectIds } }).exec();
+    return this.aieModel.find({ _id: { $in: objectIds } }).lean().exec();
   }
 
   async findByProject(projectId: string): Promise<AIE[]> {
     return this.aieModel
       .find({ projectId: new Types.ObjectId(projectId) })
+      .lean()
       .exec();
   }
 
   async findAll(): Promise<AIE[]> {
-    return this.aieModel.find().exec();
+    return this.aieModel.find().lean().exec();
   }
 
   async update(id: string, component: Partial<AIE>): Promise<AIE | null> {
-    return this.aieModel.findByIdAndUpdate(id, component, { new: true }).exec();
+    return this.aieModel.findByIdAndUpdate(id, component, { new: true }).lean().exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -61,6 +63,6 @@ export class AIERepository implements IAIERepository {
   }
 
   async findByExternalSystem(externalSystem: string): Promise<AIE[]> {
-    return this.aieModel.find({ externalSystem }).exec();
+    return this.aieModel.find({ externalSystem }).lean().exec();
   }
 }

@@ -17,28 +17,29 @@ export class DocumentRepository implements IDocumentRepository {
 
   async create(document: Partial<DocumentEntity>): Promise<DocumentEntity> {
     const createdDocument = new this.documentModel(document);
-    return createdDocument.save();
+    const saved = await createdDocument.save();
+    return saved.toObject();
   }
 
   async findById(id: Types.ObjectId): Promise<DocumentEntity | null> {
-    return this.documentModel.findById(id).exec();
+    return this.documentModel.findById(id).lean().exec();
   }
 
   async findByEstimateId(
     estimateId: Types.ObjectId,
   ): Promise<DocumentEntity[]> {
-    return this.documentModel.find({ estimateId }).exec();
+    return this.documentModel.find({ estimateId }).lean().exec();
   }
 
   async findByType(type: DocumentType): Promise<DocumentEntity[]> {
-    return this.documentModel.find({ type }).exec();
+    return this.documentModel.find({ type }).lean().exec();
   }
 
   async findByEstimateIdAndType(
     estimateId: Types.ObjectId,
     type: DocumentType,
   ): Promise<DocumentEntity[]> {
-    return this.documentModel.find({ estimateId, type }).exec();
+    return this.documentModel.find({ estimateId, type }).lean().exec();
   }
 
   async update(
@@ -47,11 +48,12 @@ export class DocumentRepository implements IDocumentRepository {
   ): Promise<DocumentEntity | null> {
     return this.documentModel
       .findByIdAndUpdate(id, updateData, { new: true })
+      .lean()
       .exec();
   }
 
   async delete(id: Types.ObjectId): Promise<boolean> {
-    const result = await this.documentModel.findByIdAndDelete(id).exec();
+    const result = await this.documentModel.findByIdAndDelete(id).lean().exec();
     return result !== null;
   }
 
@@ -61,7 +63,7 @@ export class DocumentRepository implements IDocumentRepository {
   }
 
   async findAll(): Promise<DocumentEntity[]> {
-    return this.documentModel.find().exec();
+    return this.documentModel.find().lean().exec();
   }
 
   async countByEstimateId(estimateId: Types.ObjectId): Promise<number> {

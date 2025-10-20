@@ -13,11 +13,12 @@ export class EQRepository implements IEQRepository {
 
   async create(component: Partial<EQ>): Promise<EQ> {
     const createdComponent = new this.eqModel(component);
-    return createdComponent.save();
+    const saved = await createdComponent.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<EQ | null> {
-    return this.eqModel.findById(id).exec();
+    return this.eqModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<EQ[]> {
@@ -36,21 +37,22 @@ export class EQRepository implements IEQRepository {
       return [];
     }
 
-    return this.eqModel.find({ _id: { $in: objectIds } }).exec();
+    return this.eqModel.find({ _id: { $in: objectIds } }).lean().exec();
   }
 
   async findByProject(projectId: string): Promise<EQ[]> {
     return this.eqModel
       .find({ projectId: new Types.ObjectId(projectId) })
+      .lean()
       .exec();
   }
 
   async findAll(): Promise<EQ[]> {
-    return this.eqModel.find().exec();
+    return this.eqModel.find().lean().exec();
   }
 
   async update(id: string, component: Partial<EQ>): Promise<EQ | null> {
-    return this.eqModel.findByIdAndUpdate(id, component, { new: true }).exec();
+    return this.eqModel.findByIdAndUpdate(id, component, { new: true }).lean().exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -75,6 +77,7 @@ export class EQRepository implements IEQRepository {
           ],
         },
       })
+      .lean()
       .exec();
   }
 }

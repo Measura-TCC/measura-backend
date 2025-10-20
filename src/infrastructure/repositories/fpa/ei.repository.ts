@@ -13,11 +13,12 @@ export class EIRepository implements IEIRepository {
 
   async create(component: Partial<EI>): Promise<EI> {
     const createdComponent = new this.eiModel(component);
-    return createdComponent.save();
+    const saved = await createdComponent.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<EI | null> {
-    return this.eiModel.findById(id).exec();
+    return this.eiModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<EI[]> {
@@ -36,21 +37,22 @@ export class EIRepository implements IEIRepository {
       return [];
     }
 
-    return this.eiModel.find({ _id: { $in: objectIds } }).exec();
+    return this.eiModel.find({ _id: { $in: objectIds } }).lean().exec();
   }
 
   async findByProject(projectId: string): Promise<EI[]> {
     return this.eiModel
       .find({ projectId: new Types.ObjectId(projectId) })
+      .lean()
       .exec();
   }
 
   async findAll(): Promise<EI[]> {
-    return this.eiModel.find().exec();
+    return this.eiModel.find().lean().exec();
   }
 
   async update(id: string, component: Partial<EI>): Promise<EI | null> {
-    return this.eiModel.findByIdAndUpdate(id, component, { new: true }).exec();
+    return this.eiModel.findByIdAndUpdate(id, component, { new: true }).lean().exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -61,6 +63,6 @@ export class EIRepository implements IEIRepository {
   }
 
   async findByPrimaryIntent(primaryIntent: string): Promise<EI[]> {
-    return this.eiModel.find({ primaryIntent }).exec();
+    return this.eiModel.find({ primaryIntent }).lean().exec();
   }
 }
