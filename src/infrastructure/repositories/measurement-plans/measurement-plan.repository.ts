@@ -56,7 +56,9 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
         this.logger.warn(`Invalid ObjectId format in findById: ${id}`);
         return null;
       }
-      return this.measurementPlanModel.findById(id).exec();
+      const result = await this.measurementPlanModel.findById(id).exec();
+      if (!result) return null;
+      return result.toObject();
     } catch (error) {
       return this.handleError('findById', error, null);
     }
