@@ -13,11 +13,12 @@ export class ALIRepository implements IALIRepository {
 
   async create(component: Partial<ALI>): Promise<ALI> {
     const createdComponent = new this.aliModel(component);
-    return createdComponent.save();
+    const saved = await createdComponent.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<ALI | null> {
-    return this.aliModel.findById(id).exec();
+    return this.aliModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<ALI[]> {
@@ -36,21 +37,22 @@ export class ALIRepository implements IALIRepository {
       return [];
     }
 
-    return this.aliModel.find({ _id: { $in: objectIds } }).exec();
+    return this.aliModel.find({ _id: { $in: objectIds } }).lean().exec();
   }
 
   async findByProject(projectId: string): Promise<ALI[]> {
     return this.aliModel
       .find({ projectId: new Types.ObjectId(projectId) })
+      .lean()
       .exec();
   }
 
   async findAll(): Promise<ALI[]> {
-    return this.aliModel.find().exec();
+    return this.aliModel.find().lean().exec();
   }
 
   async update(id: string, component: Partial<ALI>): Promise<ALI | null> {
-    return this.aliModel.findByIdAndUpdate(id, component, { new: true }).exec();
+    return this.aliModel.findByIdAndUpdate(id, component, { new: true }).lean().exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -69,6 +71,7 @@ export class ALIRepository implements IALIRepository {
         recordElementTypes: recordElementTypes,
         dataElementTypes: dataElementTypes,
       })
+      .lean()
       .exec();
   }
 }

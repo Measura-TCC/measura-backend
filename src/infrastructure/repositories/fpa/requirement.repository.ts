@@ -17,7 +17,8 @@ export class RequirementRepository implements IRequirementRepository {
 
   async create(requirement: Partial<Requirement>): Promise<Requirement> {
     const created = new this.requirementModel(requirement);
-    return created.save();
+    const saved = await created.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<Requirement | null> {
@@ -25,7 +26,7 @@ export class RequirementRepository implements IRequirementRepository {
       this.logger.warn(`Invalid ObjectId format in findById: ${id}`);
       return null;
     }
-    return this.requirementModel.findById(id).exec();
+    return this.requirementModel.findById(id).lean().exec();
   }
 
   async findByEstimate(estimateId: string): Promise<Requirement[]> {
@@ -38,6 +39,7 @@ export class RequirementRepository implements IRequirementRepository {
     return this.requirementModel
       .find({ estimateId: new Types.ObjectId(estimateId) })
       .sort({ createdAt: 1 })
+      .lean()
       .exec();
   }
 
@@ -56,6 +58,7 @@ export class RequirementRepository implements IRequirementRepository {
         source,
         sourceReference,
       })
+      .lean()
       .exec();
   }
 
@@ -69,6 +72,7 @@ export class RequirementRepository implements IRequirementRepository {
     }
     return this.requirementModel
       .findByIdAndUpdate(id, requirement, { new: true })
+      .lean()
       .exec();
   }
 

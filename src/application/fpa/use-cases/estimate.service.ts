@@ -140,8 +140,13 @@ export class EstimateService {
       }
     }
 
+    // Refetch the estimate to get updated component arrays after requirements processing
+    const updatedEstimate = await this.estimateRepository.findById(
+      createdEstimate._id.toString(),
+    );
+
     // Format decimal values before returning
-    return this.formatEstimateDecimals(createdEstimate);
+    return this.formatEstimateDecimals(updatedEstimate || createdEstimate);
   }
 
   async findAll(

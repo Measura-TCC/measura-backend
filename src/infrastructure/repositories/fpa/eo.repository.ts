@@ -13,11 +13,12 @@ export class EORepository implements IEORepository {
 
   async create(component: Partial<EO>): Promise<EO> {
     const createdComponent = new this.eoModel(component);
-    return createdComponent.save();
+    const saved = await createdComponent.save();
+    return saved.toObject();
   }
 
   async findById(id: string): Promise<EO | null> {
-    return this.eoModel.findById(id).exec();
+    return this.eoModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<EO[]> {
@@ -36,21 +37,22 @@ export class EORepository implements IEORepository {
       return [];
     }
 
-    return this.eoModel.find({ _id: { $in: objectIds } }).exec();
+    return this.eoModel.find({ _id: { $in: objectIds } }).lean().exec();
   }
 
   async findByProject(projectId: string): Promise<EO[]> {
     return this.eoModel
       .find({ projectId: new Types.ObjectId(projectId) })
+      .lean()
       .exec();
   }
 
   async findAll(): Promise<EO[]> {
-    return this.eoModel.find().exec();
+    return this.eoModel.find().lean().exec();
   }
 
   async update(id: string, component: Partial<EO>): Promise<EO | null> {
-    return this.eoModel.findByIdAndUpdate(id, component, { new: true }).exec();
+    return this.eoModel.findByIdAndUpdate(id, component, { new: true }).lean().exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -63,6 +65,6 @@ export class EORepository implements IEORepository {
   async findByAdditionalProcessingFlag(
     hasAdditionalProcessing: boolean,
   ): Promise<EO[]> {
-    return this.eoModel.find({ hasAdditionalProcessing }).exec();
+    return this.eoModel.find({ hasAdditionalProcessing }).lean().exec();
   }
 }

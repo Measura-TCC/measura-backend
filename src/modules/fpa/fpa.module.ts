@@ -42,6 +42,7 @@ import { ReportGeneratorService } from '@domain/fpa/services/report-generator.se
 import { DocumentService } from '@domain/fpa/services/document.service';
 import { EstimateDocumentService } from '@domain/fpa/services/estimate-document.service';
 import { EstimateService } from '@application/fpa/use-cases/estimate.service';
+import { RequirementService } from '@application/fpa/use-cases/requirement.service';
 import { ProjectsModule } from '@modules/projects/projects.module';
 
 @Module({
@@ -100,6 +101,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
     DocumentService,
     EstimateDocumentService,
     EstimateService,
+    RequirementService,
   ],
   exports: [
     ALI_REPOSITORY,
@@ -118,6 +120,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
     DocumentService,
     EstimateDocumentService,
     EstimateService,
+    RequirementService,
   ],
 })
 export class FPAModule {}
