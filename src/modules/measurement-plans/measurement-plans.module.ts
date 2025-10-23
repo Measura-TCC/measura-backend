@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   MeasurementPlan,
@@ -42,7 +42,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
         schema: MeasurementDataSchema,
       },
     ]),
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
   ],
   controllers: [
     MeasurementPlansController,
@@ -66,6 +66,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
   exports: [
     MeasurementPlanService,
     MEASUREMENT_PLAN_REPOSITORY,
+    MeasurementPlanRepository,
     CycleService,
     MeasurementDataService,
     StatusService,

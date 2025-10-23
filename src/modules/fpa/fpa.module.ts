@@ -1,4 +1,4 @@
-import { Module, Logger } from '@nestjs/common';
+import { Module, Logger, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { ALI, ALISchema } from '@domain/fpa/entities/ali.entity';
@@ -57,7 +57,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
       { name: DocumentEntity.name, schema: DocumentEntitySchema },
       { name: Requirement.name, schema: RequirementSchema },
     ]),
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
   ],
   providers: [
     Logger,
@@ -93,6 +93,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
       provide: REQUIREMENT_REPOSITORY,
       useClass: RequirementRepository,
     },
+    EstimateRepository,
     ComplexityCalculator,
     FunctionPointCalculator,
     TrendAnalysisService,
@@ -110,6 +111,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
     EO_REPOSITORY,
     EQ_REPOSITORY,
     ESTIMATE_REPOSITORY,
+    EstimateRepository,
     DOCUMENT_REPOSITORY,
     REQUIREMENT_REPOSITORY,
     ComplexityCalculator,

@@ -113,8 +113,9 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
         return [];
       }
       return this.measurementPlanModel
-        .find({ associatedProject: projectId })
+        .find({ associatedProject: new Types.ObjectId(projectId) })
         .sort({ createdAt: -1 })
+        .lean()
         .exec();
     } catch (error) {
       return this.handleError('findByProjectId', error, []);
