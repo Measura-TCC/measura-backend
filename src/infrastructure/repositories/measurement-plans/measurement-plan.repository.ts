@@ -254,7 +254,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       return this.measurementPlanModel
         .findByIdAndUpdate(
           planId,
-          { $pull: { objectives: { _id: objectiveId } } },
+          { $pull: { objectives: { _id: new Types.ObjectId(objectiveId) } } },
           { new: true },
         )
         .exec();
@@ -358,8 +358,8 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       return this.measurementPlanModel
         .findOneAndUpdate(
-          { _id: planId, 'objectives._id': objectiveId },
-          { $pull: { 'objectives.$.questions': { _id: questionId } } },
+          { _id: planId, 'objectives._id': new Types.ObjectId(objectiveId) },
+          { $pull: { 'objectives.$.questions': { _id: new Types.ObjectId(questionId) } } },
           { new: true },
         )
         .exec();
