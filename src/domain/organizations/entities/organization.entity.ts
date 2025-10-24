@@ -27,7 +27,49 @@ export interface OrganizationalObjective {
   status: ObjectiveStatus;
   targetDate?: Date;
   completionDate?: Date;
-  progress?: number; // 0-100 percentage
+  progress?: number;
+}
+
+export interface JiraIntegration {
+  domain: string;
+  email: string;
+  apiToken: string;
+  enabled: boolean;
+  configuredBy: Types.ObjectId;
+  configuredAt: Date;
+  lastUsedAt?: Date;
+}
+
+export interface GitHubIntegration {
+  token: string;
+  enabled: boolean;
+  configuredBy: Types.ObjectId;
+  configuredAt: Date;
+  lastUsedAt?: Date;
+}
+
+export interface ClickUpIntegration {
+  token: string;
+  enabled: boolean;
+  configuredBy: Types.ObjectId;
+  configuredAt: Date;
+  lastUsedAt?: Date;
+}
+
+export interface AzureDevOpsIntegration {
+  organization: string;
+  pat: string;
+  enabled: boolean;
+  configuredBy: Types.ObjectId;
+  configuredAt: Date;
+  lastUsedAt?: Date;
+}
+
+export interface OrganizationIntegrations {
+  jira?: JiraIntegration;
+  github?: GitHubIntegration;
+  clickup?: ClickUpIntegration;
+  azureDevops?: AzureDevOpsIntegration;
 }
 
 @Schema({ timestamps: true })
@@ -78,6 +120,14 @@ export class Organization {
   organizationalObjectives?: string;
 
   @ApiProperty({
+    description: 'External integrations configuration (Jira, GitHub, ClickUp, Azure DevOps)',
+    type: Object,
+    required: false,
+  })
+  @Prop({ type: Object, default: {} })
+  integrations?: OrganizationIntegrations;
+
+  @ApiProperty({
     description: 'The ID of the user who created the organization',
   })
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
@@ -94,7 +144,10 @@ export class Organization {
 
 export const OrganizationSchema = SchemaFactory.createForClass(Organization);
 
-// Add indexes for performance
 OrganizationSchema.index({ 'objectives._id': 1 });
 OrganizationSchema.index({ 'objectives.status': 1 });
 OrganizationSchema.index({ 'objectives.priority': 1 });
+OrganizationSchema.index({ 'integrations.jira.enabled': 1 });
+OrganizationSchema.index({ 'integrations.github.enabled': 1 });
+OrganizationSchema.index({ 'integrations.clickup.enabled': 1 });
+OrganizationSchema.index({ 'integrations.azureDevops.enabled': 1 });
