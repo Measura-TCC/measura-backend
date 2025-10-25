@@ -19,12 +19,13 @@ export class ImportClickUpRequirementsDto {
   projectId: string;
 
   @ApiProperty({
-    description: 'Estimate ID',
+    description: 'Estimate ID (optional when preview=true)',
     example: '68f45221568697b82b8ea111',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsMongoId()
-  estimateId: string;
+  estimateId?: string;
 
   @ApiProperty({
     description: 'ClickUp list ID',
@@ -43,4 +44,14 @@ export class ImportClickUpRequirementsDto {
   @IsOptional()
   @IsBoolean()
   includeClosed?: boolean;
+
+  @ApiProperty({
+    description: 'Preview mode - fetch requirements without saving to database',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  preview?: boolean;
 }

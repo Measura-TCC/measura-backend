@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsMongoId } from 'class-validator';
+import { IsNotEmpty, IsString, IsMongoId, IsOptional, IsBoolean } from 'class-validator';
 
 export class ImportJiraRequirementsDto {
   @ApiProperty({
@@ -19,12 +19,13 @@ export class ImportJiraRequirementsDto {
   projectId: string;
 
   @ApiProperty({
-    description: 'Estimate ID',
+    description: 'Estimate ID (optional when preview=true)',
     example: '68f45221568697b82b8ea111',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsMongoId()
-  estimateId: string;
+  estimateId?: string;
 
   @ApiProperty({
     description: 'JQL query string',
@@ -33,4 +34,14 @@ export class ImportJiraRequirementsDto {
   @IsNotEmpty()
   @IsString()
   jql: string;
+
+  @ApiProperty({
+    description: 'Preview mode - fetch requirements without saving to database',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  preview?: boolean;
 }

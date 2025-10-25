@@ -21,6 +21,8 @@ export class JiraImportService {
   ) {}
 
   async importRequirements(dto: ImportJiraRequirementsDto): Promise<ImportResult & { requirements: Requirement[] }> {
+    const { preview = false } = dto;
+
     const integration = await this.integrationService.getIntegration<JiraIntegration>(
       dto.organizationId,
       'jira',
@@ -42,6 +44,36 @@ export class JiraImportService {
       requirements: [],
       errors: [],
     };
+
+    if (preview) {
+      for (const issue of externalIssues) {
+        const requirement = {
+          _id: new Types.ObjectId(),
+          title: issue.title,
+          description: issue.description,
+          source: 'jira' as const,
+          sourceReference: issue.id,
+          sourceMetadata: {
+            ...issue.metadata,
+            externalUrl: issue.externalUrl,
+          },
+          estimateId: dto.estimateId ? new Types.ObjectId(dto.estimateId) : undefined,
+          organizationId: new Types.ObjectId(dto.organizationId),
+          projectId: new Types.ObjectId(dto.projectId),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any;
+
+        result.requirements.push(requirement);
+        result.imported++;
+      }
+
+      return result;
+    }
+
+    if (!dto.estimateId) {
+      throw new Error('estimateId is required when not in preview mode');
+    }
 
     for (const issue of externalIssues) {
       const existing = await this.requirementRepository.findBySource(

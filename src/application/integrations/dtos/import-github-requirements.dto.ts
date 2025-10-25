@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsMongoId, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsMongoId, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 
 export class ImportGitHubRequirementsDto {
   @ApiProperty({
@@ -19,12 +19,13 @@ export class ImportGitHubRequirementsDto {
   projectId: string;
 
   @ApiProperty({
-    description: 'Estimate ID',
+    description: 'Estimate ID (optional when preview=true)',
     example: '68f45221568697b82b8ea111',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsMongoId()
-  estimateId: string;
+  estimateId?: string;
 
   @ApiProperty({
     description: 'GitHub repository owner',
@@ -51,4 +52,14 @@ export class ImportGitHubRequirementsDto {
   @IsNotEmpty()
   @IsEnum(['open', 'closed', 'all'])
   state: 'open' | 'closed' | 'all';
+
+  @ApiProperty({
+    description: 'Preview mode - fetch requirements without saving to database',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  preview?: boolean;
 }
