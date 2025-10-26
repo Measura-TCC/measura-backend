@@ -89,24 +89,7 @@ export class JiraClient {
     const auth = Buffer.from(`${email}:${apiToken}`).toString('base64');
 
     try {
-      const serverInfoResponse = await fetch(`https://${domain}/rest/api/3/serverInfo`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!serverInfoResponse.ok) {
-        return {
-          success: false,
-          message: 'Invalid Jira credentials or domain',
-          details: { statusCode: serverInfoResponse.status },
-        };
-      }
-
-      const serverInfo = await serverInfoResponse.json();
-
+      // Test authentication with /myself endpoint (requires valid credentials)
       const myselfResponse = await fetch(`https://${domain}/rest/api/3/myself`, {
         method: 'GET',
         headers: {
@@ -115,20 +98,38 @@ export class JiraClient {
         },
       });
 
-      const userInfo = myselfResponse.ok ? await myselfResponse.json() : null;
+      if (!myselfResponse.ok) {
+        return {
+          success: false,
+          message: 'Invalid Jira credentials or domain',
+          details: { statusCode: myselfResponse.status },
+        };
+      }
+
+      const userInfo = await myselfResponse.json();
+
+      // Optionally get server info (doesn't require auth but provides version info)
+      const serverInfoResponse = await fetch(`https://${domain}/rest/api/3/serverInfo`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      const serverInfo = serverInfoResponse.ok ? await serverInfoResponse.json() : null;
 
       return {
         success: true,
         message: 'Jira connection successful',
         details: {
-          serverInfo: {
+          serverInfo: serverInfo ? {
             version: serverInfo.version,
             deploymentType: serverInfo.deploymentType,
-          },
-          userInfo: userInfo ? {
+          } : null,
+          userInfo: {
             displayName: userInfo.displayName,
             emailAddress: userInfo.emailAddress,
-          } : null,
+          },
         },
       };
     } catch (error) {

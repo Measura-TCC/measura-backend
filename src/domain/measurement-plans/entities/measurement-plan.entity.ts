@@ -151,8 +151,9 @@ export class Objective {
 
 export enum MeasurementPlanStatus {
   DRAFT = 'draft',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  FINISHED = 'finished',
 }
 
 @Schema({ timestamps: true })

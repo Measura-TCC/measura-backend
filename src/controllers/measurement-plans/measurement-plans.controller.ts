@@ -367,16 +367,17 @@ export class MeasurementPlansController {
   }
 
   // Metrics Management
-  @Post(':id/objectives/:objectiveId/questions/:questionId/metrics')
+  @Post(':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics')
   @ApiOperation({
     summary: 'Add metric to question (with at least one measurement required)',
   })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiResponse({ status: 201, description: 'Metric added successfully' })
   async addMetric(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Body() createDto: CreateMetricDto,
@@ -397,15 +398,16 @@ export class MeasurementPlansController {
     );
   }
 
-  @Put(':id/objectives/:objectiveId/questions/:questionId/metrics/:metricId')
+  @Put(':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId')
   @ApiOperation({ summary: 'Update metric and its measurements' })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiParam({ name: 'metricId', description: 'Metric ID' })
   @ApiResponse({ status: 200, description: 'Metric updated successfully' })
   async updateMetric(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Param('metricId', ParseMongoIdPipe) metricId: string,
@@ -428,16 +430,17 @@ export class MeasurementPlansController {
     );
   }
 
-  @Delete(':id/objectives/:objectiveId/questions/:questionId/metrics/:metricId')
+  @Delete(':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete metric from question' })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiParam({ name: 'metricId', description: 'Metric ID' })
   @ApiResponse({ status: 204, description: 'Metric deleted successfully' })
   async deleteMetric(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Param('metricId', ParseMongoIdPipe) metricId: string,
@@ -460,16 +463,17 @@ export class MeasurementPlansController {
 
   // Measurements Management
   @Post(
-    ':id/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements',
   )
   @ApiOperation({ summary: 'Add measurement to metric' })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiParam({ name: 'metricId', description: 'Metric ID' })
   @ApiResponse({ status: 201, description: 'Measurement added successfully' })
   async addMeasurement(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Param('metricId', ParseMongoIdPipe) metricId: string,
@@ -493,17 +497,18 @@ export class MeasurementPlansController {
   }
 
   @Put(
-    ':id/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
   )
   @ApiOperation({ summary: 'Update specific measurement' })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiParam({ name: 'metricId', description: 'Metric ID' })
   @ApiParam({ name: 'measurementId', description: 'Measurement ID' })
   @ApiResponse({ status: 200, description: 'Measurement updated successfully' })
   async updateMeasurement(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Param('metricId', ParseMongoIdPipe) metricId: string,
@@ -529,18 +534,19 @@ export class MeasurementPlansController {
   }
 
   @Delete(
-    ':id/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
   )
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete specific measurement' })
-  @ApiParam({ name: 'id', description: 'Plan ID' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
   @ApiParam({ name: 'questionId', description: 'Question ID' })
   @ApiParam({ name: 'metricId', description: 'Metric ID' })
   @ApiParam({ name: 'measurementId', description: 'Measurement ID' })
   @ApiResponse({ status: 204, description: 'Measurement deleted successfully' })
   async deleteMeasurement(
-    @Param('id', ParseMongoIdPipe) planId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
     @Param('objectiveId', ParseMongoIdPipe) objectiveId: string,
     @Param('questionId', ParseMongoIdPipe) questionId: string,
     @Param('metricId', ParseMongoIdPipe) metricId: string,
