@@ -56,7 +56,9 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
         this.logger.warn(`Invalid ObjectId format in findById: ${id}`);
         return null;
       }
-      return this.measurementPlanModel.findById(id).exec();
+      const result = await this.measurementPlanModel.findById(id).exec();
+      if (!result) return null;
+      return result.toObject();
     } catch (error) {
       return this.handleError('findById', error, null);
     }
@@ -111,8 +113,9 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
         return [];
       }
       return this.measurementPlanModel
-        .find({ associatedProject: projectId })
+        .find({ associatedProject: new Types.ObjectId(projectId) })
         .sort({ createdAt: -1 })
+        .lean()
         .exec();
     } catch (error) {
       return this.handleError('findByProjectId', error, []);
@@ -251,7 +254,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       return this.measurementPlanModel
         .findByIdAndUpdate(
           planId,
-          { $pull: { objectives: { _id: objectiveId } } },
+          { $pull: { objectives: { _id: new Types.ObjectId(objectiveId) } } },
           { new: true },
         )
         .exec();
@@ -355,8 +358,8 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       return this.measurementPlanModel
         .findOneAndUpdate(
-          { _id: planId, 'objectives._id': objectiveId },
-          { $pull: { 'objectives.$.questions': { _id: questionId } } },
+          { _id: planId, 'objectives._id': new Types.ObjectId(objectiveId) },
+          { $pull: { 'objectives.$.questions': { _id: new Types.ObjectId(questionId) } } },
           { new: true },
         )
         .exec();

@@ -99,7 +99,7 @@ export class ProjectController {
   }
 
   @Get(':organizationId/:id')
-  @ApiOperation({ summary: 'Get a project by id' })
+  @ApiOperation({ summary: 'Get a project by id with related plans and estimates' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({
     name: 'id',
@@ -107,7 +107,7 @@ export class ProjectController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Return the project with the specified id.',
+    description: 'Return the project with the specified id, including measurement plans and estimates.',
   })
   @ApiResponse({ status: 404, description: 'Project not found.' })
   @ApiResponse({ status: 403, description: 'Access denied to organization' })
@@ -118,14 +118,14 @@ export class ProjectController {
   ) {
     this.validateOrganizationAccess(req.user.organizationId, organizationId);
 
-    const project = await this.projectService.findOne(id);
+    const projectWithRelations = await this.projectService.findOneWithRelations(id);
 
     // Ensure project belongs to the requested organization
-    if (project.organizationId.toString() !== organizationId) {
+    if (projectWithRelations.organizationId.toString() !== organizationId) {
       throw new ForbiddenException('Access denied to this project');
     }
 
-    return project;
+    return projectWithRelations;
   }
 
   @Put(':organizationId/:id')

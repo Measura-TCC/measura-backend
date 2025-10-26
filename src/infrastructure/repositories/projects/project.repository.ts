@@ -21,7 +21,7 @@ export class ProjectRepository implements IProjectRepository {
   }
 
   async findById(id: string): Promise<Project | null> {
-    return this.projectModel.findById(id).exec();
+    return this.projectModel.findById(id).lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<Project[]> {
@@ -56,6 +56,7 @@ export class ProjectRepository implements IProjectRepository {
     }
     return this.projectModel
       .find({ organizationId: new Types.ObjectId(organizationId) })
+      .lean()
       .exec();
   }
 
