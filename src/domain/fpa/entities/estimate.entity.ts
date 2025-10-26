@@ -5,9 +5,9 @@ import { ApiProperty } from '@nestjs/swagger';
 export type EstimateDocument = Estimate & Document;
 
 export enum EstimateStatus {
-  DRAFT = 'DRAFT',
-  FINALIZED = 'FINALIZED',
-  ARCHIVED = 'ARCHIVED',
+  DRAFT = 'draft',
+  FINALIZED = 'finalized',
+  ARCHIVED = 'archived',
 }
 
 // FR01: Count Type Selection

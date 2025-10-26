@@ -14,6 +14,7 @@ import { UsersModule } from '@app/modules/users/users.module';
 import { OrganizationsModule } from '@app/modules/organizations/organizations.module';
 import { MeasurementPlansModule } from '@modules/measurement-plans/measurement-plans.module';
 import { OrganizationInvitationsModule } from '@app/modules/organization-invitations/organization-invitations.module';
+import { IntegrationsModule } from '@modules/integrations/integrations.module';
 
 // Controller Modules
 import { EstimatesModule } from '@controllers/fpa/estimates.module';
@@ -59,6 +60,7 @@ import { Organization, OrganizationSchema } from '@domain/organizations/entities
     OrganizationsModule,
     MeasurementPlansModule,
     OrganizationInvitationsModule,
+    IntegrationsModule,
 
     // Controller Modules
     EstimatesModule,

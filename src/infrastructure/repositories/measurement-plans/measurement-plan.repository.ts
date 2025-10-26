@@ -218,7 +218,8 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       const updateFields: any = {};
       Object.keys(objective).forEach((key) => {
-        if (key !== '_id') {
+        // Don't update _id or nested arrays (questions should use dedicated endpoints)
+        if (key !== '_id' && key !== 'questions') {
           updateFields[`objectives.$.${key}`] =
             objective[key as keyof Objective];
         }
@@ -226,7 +227,10 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       return this.measurementPlanModel
         .findOneAndUpdate(
-          { _id: planId, 'objectives._id': objectiveId },
+          {
+            _id: new Types.ObjectId(planId),
+            'objectives._id': new Types.ObjectId(objectiveId),
+          },
           { $set: updateFields },
           { new: true },
         )
@@ -288,7 +292,10 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       return this.measurementPlanModel
         .findOneAndUpdate(
-          { _id: planId, 'objectives._id': objectiveId },
+          {
+            _id: new Types.ObjectId(planId),
+            'objectives._id': new Types.ObjectId(objectiveId),
+          },
           { $push: { 'objectives.$.questions': newQuestion } },
           { new: true },
         )
@@ -329,12 +336,14 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       if (questionIndex === -1) return null;
 
       Object.keys(question).forEach((key) => {
-        if (key !== '_id') {
+        // Don't update _id or nested arrays (metrics should use dedicated endpoints)
+        if (key !== '_id' && key !== 'metrics') {
           (objective.questions[questionIndex] as any)[key] =
             question[key as keyof Question];
         }
       });
 
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('updateQuestion', error, null);
@@ -358,7 +367,10 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
 
       return this.measurementPlanModel
         .findOneAndUpdate(
-          { _id: planId, 'objectives._id': new Types.ObjectId(objectiveId) },
+          {
+            _id: new Types.ObjectId(planId),
+            'objectives._id': new Types.ObjectId(objectiveId),
+          },
           { $pull: { 'objectives.$.questions': { _id: new Types.ObjectId(questionId) } } },
           { new: true },
         )
@@ -396,20 +408,38 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       };
 
       const plan = await this.measurementPlanModel.findById(planId);
-      if (!plan) return null;
+      if (!plan) {
+        this.logger.warn(`Plan not found: ${planId}`);
+        return null;
+      }
 
       const objective = plan.objectives.find(
         (obj) => obj._id.toString() === objectiveId,
       );
-      if (!objective) return null;
+      if (!objective) {
+        this.logger.warn(`Objective not found: ${objectiveId} in plan ${planId}`);
+        return null;
+      }
 
       const question = objective.questions.find(
         (q) => q._id.toString() === questionId,
       );
-      if (!question) return null;
+      if (!question) {
+        this.logger.warn(`Question not found: ${questionId} in objective ${objectiveId}`);
+        return null;
+      }
 
+      this.logger.log(`Adding metric to question ${questionId}, current metrics: ${question.metrics.length}`);
       question.metrics.push(newMetric as Metric);
-      return await plan.save();
+      this.logger.log(`After push, metrics count: ${question.metrics.length}`);
+
+      // Mark the nested array as modified so Mongoose saves it
+      plan.markModified('objectives');
+
+      const savedPlan = await plan.save();
+      this.logger.log(`Plan saved successfully, metrics in saved plan: ${savedPlan.objectives.find(o => o._id.toString() === objectiveId)?.questions.find(q => q._id.toString() === questionId)?.metrics.length}`);
+
+      return savedPlan;
     } catch (error) {
       return this.handleError('addMetric', error, null);
     }
@@ -452,20 +482,14 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       if (metricIndex === -1) return null;
 
       Object.keys(metric).forEach((key) => {
-        if (key !== '_id') {
-          if (key === 'measurements' && metric.measurements) {
-            question.metrics[metricIndex].measurements =
-              metric.measurements.map((m) => ({
-                ...m,
-                _id: new Types.ObjectId(),
-              })) as Measurement[];
-          } else {
-            (question.metrics[metricIndex] as any)[key] =
-              metric[key as keyof Metric];
-          }
+        // Don't update _id or measurements (measurements should use dedicated endpoints)
+        if (key !== '_id' && key !== 'measurements') {
+          (question.metrics[metricIndex] as any)[key] =
+            metric[key as keyof Metric];
         }
       });
 
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('updateMetric', error, null);
@@ -505,6 +529,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       question.metrics = question.metrics.filter(
         (m) => m._id.toString() !== metricId,
       );
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('deleteMetric', error, null);
@@ -554,6 +579,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       };
 
       metric.measurements.push(newMeasurement as Measurement);
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('addMeasurement', error, null);
@@ -610,6 +636,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
         }
       });
 
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('updateMeasurement', error, null);
@@ -656,6 +683,7 @@ export class MeasurementPlanRepository implements IMeasurementPlanRepository {
       metric.measurements = metric.measurements.filter(
         (m) => m._id.toString() !== measurementId,
       );
+      plan.markModified('objectives');
       return await plan.save();
     } catch (error) {
       return this.handleError('deleteMeasurement', error, null);

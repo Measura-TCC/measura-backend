@@ -267,13 +267,13 @@ export class MeasurementPlanService {
       throw new ForbiddenException('Access denied to this measurement plan');
     }
 
-    // Prevent deletion of active or completed plans
+    // Prevent deletion of approved or finished plans
     if (
-      plan.status === MeasurementPlanStatus.ACTIVE ||
-      plan.status === MeasurementPlanStatus.COMPLETED
+      plan.status === MeasurementPlanStatus.APPROVED ||
+      plan.status === MeasurementPlanStatus.FINISHED
     ) {
       throw new ConflictException(
-        'Cannot delete active or completed measurement plans',
+        'Cannot delete approved or finished measurement plans',
       );
     }
 
@@ -747,12 +747,16 @@ export class MeasurementPlanService {
   ): boolean {
     const transitions: Record<MeasurementPlanStatus, MeasurementPlanStatus[]> =
       {
-        [MeasurementPlanStatus.DRAFT]: [MeasurementPlanStatus.ACTIVE],
-        [MeasurementPlanStatus.ACTIVE]: [
-          MeasurementPlanStatus.COMPLETED,
+        [MeasurementPlanStatus.DRAFT]: [
+          MeasurementPlanStatus.APPROVED,
+          MeasurementPlanStatus.REJECTED,
+        ],
+        [MeasurementPlanStatus.APPROVED]: [
+          MeasurementPlanStatus.FINISHED,
           MeasurementPlanStatus.DRAFT,
         ],
-        [MeasurementPlanStatus.COMPLETED]: [], // No transitions allowed from completed
+        [MeasurementPlanStatus.REJECTED]: [MeasurementPlanStatus.DRAFT],
+        [MeasurementPlanStatus.FINISHED]: [], // No transitions allowed from finished
       };
 
     return transitions[currentStatus]?.includes(newStatus) || false;
