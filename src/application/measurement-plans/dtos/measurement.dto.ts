@@ -24,11 +24,11 @@ export class CreateMeasurementDto {
   @ApiProperty({
     description: 'The acronym for the measurement',
     example: 'TS',
-    maxLength: 3,
+    maxLength: 20,
   })
   @IsNotEmpty({ message: 'Measurement acronym is required' })
   @IsString({ message: 'Measurement acronym must be a string' })
-  @MaxLength(3, { message: 'Measurement acronym must not exceed 3 characters' })
+  @MaxLength(20, { message: 'Measurement acronym must not exceed 20 characters' })
   measurementAcronym: string;
 
   @ApiProperty({

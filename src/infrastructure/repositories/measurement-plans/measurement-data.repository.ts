@@ -66,4 +66,8 @@ export class MeasurementDataRepository {
       .countDocuments({ cycleId: new Types.ObjectId(cycleId) })
       .exec();
   }
+
+  async find(filter: Record<string, any>): Promise<MeasurementData[]> {
+    return this.dataModel.find(filter).lean().exec();
+  }
 }

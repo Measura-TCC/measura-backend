@@ -23,6 +23,7 @@ import { ParseMongoIdPipe } from '@shared/utils/pipes/parse-mongo-id.pipe';
 import { CycleService } from '@application/measurement-plans/use-cases/cycle.service';
 import { MeasurementDataService } from '@application/measurement-plans/use-cases/measurement-data.service';
 import { StatusService } from '@application/measurement-plans/use-cases/status.service';
+import { MetricCalculationService } from '@application/measurement-plans/use-cases/metric-calculation.service';
 import {
   CreateCycleDto,
   UpdateCycleDto,
@@ -33,6 +34,10 @@ import {
   MeasurementDataResponseDto,
   MetricStatusDto,
   PlanStatusDto,
+  MetricCalculationResultDto,
+  CycleMeasurementsResponseDto,
+  FormulaValidationDto,
+  ValidateFormulaDto,
 } from '@application/measurement-plans/dtos';
 
 interface AuthenticatedRequest {
@@ -52,6 +57,7 @@ export class CyclesController {
     private readonly cycleService: CycleService,
     private readonly dataService: MeasurementDataService,
     private readonly statusService: StatusService,
+    private readonly calculationService: MetricCalculationService,
   ) {}
 
   @Post(':organizationId/:planId/cycles')
@@ -258,5 +264,74 @@ export class CyclesController {
     @Param('planId', ParseMongoIdPipe) planId: string,
   ) {
     return this.statusService.getPlanStatus(planId);
+  }
+
+  @Get(
+    ':organizationId/:planId/cycles/:cycleId/metrics/:metricId/measurements-with-acronyms',
+  )
+  @ApiOperation({
+    summary: 'Get measurements with acronyms for a metric in a cycle',
+  })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
+  @ApiParam({ name: 'cycleId', description: 'Cycle ID' })
+  @ApiParam({ name: 'metricId', description: 'Metric ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Measurements with acronyms retrieved successfully',
+    type: CycleMeasurementsResponseDto,
+  })
+  async getMeasurementsWithAcronyms(
+    @Param('organizationId', ParseMongoIdPipe) organizationId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
+    @Param('cycleId', ParseMongoIdPipe) cycleId: string,
+    @Param('metricId', ParseMongoIdPipe) metricId: string,
+  ) {
+    return this.calculationService.getMeasurementsWithAcronyms(
+      planId,
+      cycleId,
+      metricId,
+    );
+  }
+
+  @Post(':organizationId/:planId/cycles/:cycleId/metrics/:metricId/calculate')
+  @ApiOperation({ summary: 'Calculate metric value for a cycle' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
+  @ApiParam({ name: 'cycleId', description: 'Cycle ID' })
+  @ApiParam({ name: 'metricId', description: 'Metric ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Metric calculated successfully',
+    type: MetricCalculationResultDto,
+  })
+  async calculateMetric(
+    @Param('organizationId', ParseMongoIdPipe) organizationId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
+    @Param('cycleId', ParseMongoIdPipe) cycleId: string,
+    @Param('metricId', ParseMongoIdPipe) metricId: string,
+  ) {
+    return this.calculationService.calculateMetricForCycle(
+      planId,
+      metricId,
+      cycleId,
+    );
+  }
+
+  @Post(':organizationId/:planId/metrics/validate-formula')
+  @ApiOperation({ summary: 'Validate a metric formula' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiParam({ name: 'planId', description: 'Plan ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Formula validation result',
+    type: FormulaValidationDto,
+  })
+  async validateFormula(
+    @Param('organizationId', ParseMongoIdPipe) organizationId: string,
+    @Param('planId', ParseMongoIdPipe) planId: string,
+    @Body() dto: ValidateFormulaDto,
+  ) {
+    return this.calculationService.validateFormula(dto.formula);
   }
 }
