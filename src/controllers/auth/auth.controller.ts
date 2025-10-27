@@ -175,6 +175,24 @@ export class AuthController {
     return this.authService.getEmailDebugInfo();
   }
 
+  @Post('refresh-session')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh access token with latest user data',
+    description:
+      'Generates a new access token with updated user information (like organizationId). Use this after joining/creating an organization.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Token successfully refreshed with latest user data',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async refreshSession(@Request() req: AuthenticatedRequest) {
+    return this.authService.refreshSession(req.user._id);
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

@@ -12,6 +12,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Request,
+  Inject,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -31,6 +32,26 @@ import {
   FunctionPointCalculator,
   EstimationMetrics,
 } from '@domain/fpa/services/function-point-calculator.service';
+import {
+  ALI_REPOSITORY,
+  IALIRepository,
+} from '@domain/fpa/interfaces/ali.repository.interface';
+import {
+  AIE_REPOSITORY,
+  IAIERepository,
+} from '@domain/fpa/interfaces/aie.repository.interface';
+import {
+  EI_REPOSITORY,
+  IEIRepository,
+} from '@domain/fpa/interfaces/ei.repository.interface';
+import {
+  EO_REPOSITORY,
+  IEORepository,
+} from '@domain/fpa/interfaces/eo.repository.interface';
+import {
+  EQ_REPOSITORY,
+  IEQRepository,
+} from '@domain/fpa/interfaces/eq.repository.interface';
 
 interface AuthenticatedRequest {
   user: {
@@ -45,7 +66,19 @@ interface AuthenticatedRequest {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class EstimatesController {
-  constructor(private readonly estimateService: EstimateService) {}
+  constructor(
+    private readonly estimateService: EstimateService,
+    @Inject(ALI_REPOSITORY)
+    private readonly aliRepository: IALIRepository,
+    @Inject(AIE_REPOSITORY)
+    private readonly aieRepository: IAIERepository,
+    @Inject(EI_REPOSITORY)
+    private readonly eiRepository: IEIRepository,
+    @Inject(EO_REPOSITORY)
+    private readonly eoRepository: IEORepository,
+    @Inject(EQ_REPOSITORY)
+    private readonly eqRepository: IEQRepository,
+  ) {}
 
   private validateOrganizationAccess(
     userOrgId: string | null,
@@ -260,50 +293,64 @@ export class EstimatesController {
     try {
       const estimate = await this.estimateService.findOne(id, organizationId);
 
-      // Get all components for detailed calculations - Placeholder logic
-      // TODO: Replace with actual component repository calls
-      const aliComponents =
-        estimate.internalLogicalFiles?.map(() => ({
-          type: 'ALI',
-          functionPoints: 10,
-          complexity: 'AVERAGE',
-        })) || [];
+      // Fetch actual components from database
+      const aliComponents = estimate.internalLogicalFiles?.length
+        ? await this.aliRepository.findByIds(
+            estimate.internalLogicalFiles.map((id) => id.toString()),
+          )
+        : [];
 
-      const aieComponents =
-        estimate.externalInterfaceFiles?.map(() => ({
-          type: 'AIE',
-          functionPoints: 7,
-          complexity: 'AVERAGE',
-        })) || [];
+      const aieComponents = estimate.externalInterfaceFiles?.length
+        ? await this.aieRepository.findByIds(
+            estimate.externalInterfaceFiles.map((id) => id.toString()),
+          )
+        : [];
 
-      const eiComponents =
-        estimate.externalInputs?.map(() => ({
-          type: 'EI',
-          functionPoints: 4,
-          complexity: 'LOW',
-        })) || [];
+      const eiComponents = estimate.externalInputs?.length
+        ? await this.eiRepository.findByIds(
+            estimate.externalInputs.map((id) => id.toString()),
+          )
+        : [];
 
-      const eoComponents =
-        estimate.externalOutputs?.map(() => ({
-          type: 'EO',
-          functionPoints: 5,
-          complexity: 'AVERAGE',
-        })) || [];
+      const eoComponents = estimate.externalOutputs?.length
+        ? await this.eoRepository.findByIds(
+            estimate.externalOutputs.map((id) => id.toString()),
+          )
+        : [];
 
-      const eqComponents =
-        estimate.externalQueries?.map(() => ({
-          type: 'EQ',
-          functionPoints: 3,
-          complexity: 'LOW',
-        })) || [];
+      const eqComponents = estimate.externalQueries?.length
+        ? await this.eqRepository.findByIds(
+            estimate.externalQueries.map((id) => id.toString()),
+          )
+        : [];
 
-      // Combine all components
+      // Map to component format expected by FunctionPointCalculator
       const allComponents = [
-        ...aliComponents,
-        ...aieComponents,
-        ...eiComponents,
-        ...eoComponents,
-        ...eqComponents,
+        ...aliComponents.map((c) => ({
+          type: 'ALI',
+          functionPoints: c.functionPoints,
+          complexity: c.complexity,
+        })),
+        ...aieComponents.map((c) => ({
+          type: 'AIE',
+          functionPoints: c.functionPoints,
+          complexity: c.complexity,
+        })),
+        ...eiComponents.map((c) => ({
+          type: 'EI',
+          functionPoints: c.functionPoints,
+          complexity: c.complexity,
+        })),
+        ...eoComponents.map((c) => ({
+          type: 'EO',
+          functionPoints: c.functionPoints,
+          complexity: c.complexity,
+        })),
+        ...eqComponents.map((c) => ({
+          type: 'EQ',
+          functionPoints: c.functionPoints,
+          complexity: c.complexity,
+        })),
       ];
 
       // Extract function points for calculation
