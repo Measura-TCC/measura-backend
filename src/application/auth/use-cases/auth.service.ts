@@ -532,6 +532,14 @@ export class AuthService {
     };
   }
 
+  async refreshSession(userId: string): Promise<AuthResponseDto> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return this.generateToken(user);
+  }
+
   private async generateToken(user: User): Promise<AuthResponseDto> {
     if (!user._id) {
       throw new BadRequestException('Invalid user data for token generation');

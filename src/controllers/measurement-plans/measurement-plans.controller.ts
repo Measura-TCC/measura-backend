@@ -463,9 +463,9 @@ export class MeasurementPlansController {
 
   // Measurements Management
   @Post(
-    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurement-definitions',
   )
-  @ApiOperation({ summary: 'Add measurement to metric' })
+  @ApiOperation({ summary: 'Add measurement definition (schema/template) to metric' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
@@ -497,9 +497,9 @@ export class MeasurementPlansController {
   }
 
   @Put(
-    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurement-definitions/:measurementId',
   )
-  @ApiOperation({ summary: 'Update specific measurement' })
+  @ApiOperation({ summary: 'Update specific measurement definition' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
@@ -534,10 +534,10 @@ export class MeasurementPlansController {
   }
 
   @Delete(
-    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements/:measurementId',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurement-definitions/:measurementId',
   )
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete specific measurement' })
+  @ApiOperation({ summary: 'Delete specific measurement definition' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })

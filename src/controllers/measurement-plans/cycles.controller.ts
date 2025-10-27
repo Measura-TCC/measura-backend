@@ -157,9 +157,9 @@ export class CyclesController {
   }
 
   @Post(
-    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurements',
+    ':organizationId/:planId/objectives/:objectiveId/questions/:questionId/metrics/:metricId/measurement-data',
   )
-  @ApiOperation({ summary: 'Add measurement data to a metric' })
+  @ApiOperation({ summary: 'Add measurement data (actual values) to a metric' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({ name: 'planId', description: 'Plan ID' })
   @ApiParam({ name: 'objectiveId', description: 'Objective ID' })
