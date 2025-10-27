@@ -41,7 +41,7 @@ export class StatusService {
     // Skip metrics without formula or control range
     if (!metric.metricFormula || !metric.metricControlRange) {
       return {
-        status: 'OK',
+        status: 'NO_DATA',
         withinRange: 0,
         outOfRange: 0,
         totalMeasurements: 0,
@@ -86,8 +86,17 @@ export class StatusService {
       }
     }
 
+    // Determine status:
+    // - If no calculations (no cycles or no data), status is NO_DATA
+    // - If all calculations are within range, status is OK
+    // - If any calculation is out of range, status is NEEDS_ATTENTION
+    let status: 'OK' | 'NEEDS_ATTENTION' | 'NO_DATA' = 'NO_DATA';
+    if (totalCalculations > 0) {
+      status = outOfRange > 0 ? 'NEEDS_ATTENTION' : 'OK';
+    }
+
     return {
-      status: outOfRange === 0 && totalCalculations > 0 ? 'OK' : 'NEEDS_ATTENTION',
+      status,
       withinRange,
       outOfRange,
       totalMeasurements: totalCalculations,
@@ -117,23 +126,31 @@ export class StatusService {
 
     let metricsOk = 0;
     let metricsNeedAttention = 0;
+    let metricsWithNoData = 0;
 
     for (const { id: metricId } of metricsWithRanges) {
       const status = await this.getMetricStatus(planId, metricId);
       if (status.status === 'OK') {
         metricsOk++;
-      } else {
+      } else if (status.status === 'NEEDS_ATTENTION') {
         metricsNeedAttention++;
+      } else {
+        metricsWithNoData++;
       }
     }
 
     // Determine overall status:
-    // - If no metrics with control ranges exist, status is OK (nothing to monitor)
+    // - If no metrics with control ranges exist, status is NO_DATA
+    // - If all metrics have no data, status is NO_DATA
+    // - If any metric needs attention, status is NEEDS_ATTENTION
     // - If all metrics are OK, status is OK
-    // - Otherwise, status is NEEDS_ATTENTION
-    let overallStatus: 'OK' | 'NEEDS_ATTENTION' = 'OK';
-    if (metricsWithRanges.length > 0 && metricsNeedAttention > 0) {
+    let overallStatus: 'OK' | 'NEEDS_ATTENTION' | 'NO_DATA' = 'NO_DATA';
+    if (metricsWithRanges.length === 0 || metricsWithNoData === metricsWithRanges.length) {
+      overallStatus = 'NO_DATA';
+    } else if (metricsNeedAttention > 0) {
       overallStatus = 'NEEDS_ATTENTION';
+    } else {
+      overallStatus = 'OK';
     }
 
     return {
