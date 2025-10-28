@@ -174,9 +174,9 @@ export class CycleWithMeasurementsDto {
 export class MetricStatusDto {
   @ApiProperty({
     description: 'The status of the metric',
-    enum: ['OK', 'NEEDS_ATTENTION'],
+    enum: ['OK', 'NEEDS_ATTENTION', 'NO_DATA'],
   })
-  status: 'OK' | 'NEEDS_ATTENTION';
+  status: 'OK' | 'NEEDS_ATTENTION' | 'NO_DATA';
 
   @ApiProperty({ description: 'Count of measurements within control range' })
   withinRange: number;
@@ -200,9 +200,9 @@ export class MetricStatusDto {
 export class PlanStatusDto {
   @ApiProperty({
     description: 'The overall status of the plan',
-    enum: ['OK', 'NEEDS_ATTENTION'],
+    enum: ['OK', 'NEEDS_ATTENTION', 'NO_DATA'],
   })
-  overallStatus: 'OK' | 'NEEDS_ATTENTION';
+  overallStatus: 'OK' | 'NEEDS_ATTENTION' | 'NO_DATA';
 
   @ApiProperty({ description: 'Count of metrics with status OK' })
   metricsOk: number;

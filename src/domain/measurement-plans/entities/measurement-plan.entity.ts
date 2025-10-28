@@ -13,8 +13,8 @@ export class Measurement {
   @Prop({ required: true, maxlength: 50 })
   measurementEntity: string;
 
-  @ApiProperty({ description: 'The acronym for the measurement', maxLength: 3 })
-  @Prop({ required: true, maxlength: 3 })
+  @ApiProperty({ description: 'The acronym for the measurement', maxLength: 20 })
+  @Prop({ required: true, maxlength: 20 })
   measurementAcronym: string;
 
   @ApiProperty({

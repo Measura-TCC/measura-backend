@@ -6,3 +6,4 @@ export * from './measurement-plan.dto';
 export * from './export.dto';
 export * from './cycle.dto';
 export * from './measurement-data.dto';
+export * from './metric-calculation.dto';

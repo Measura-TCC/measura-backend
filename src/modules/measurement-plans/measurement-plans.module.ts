@@ -21,6 +21,7 @@ import { ExportService } from '@application/measurement-plans/use-cases/export.s
 import { CycleService } from '@application/measurement-plans/use-cases/cycle.service';
 import { MeasurementDataService } from '@application/measurement-plans/use-cases/measurement-data.service';
 import { StatusService } from '@application/measurement-plans/use-cases/status.service';
+import { MetricCalculationService } from '@application/measurement-plans/use-cases/metric-calculation.service';
 import { MeasurementPlansController } from '@controllers/measurement-plans/measurement-plans.controller';
 import { MeasurementPlansExportController } from '@controllers/measurement-plans/export.controller';
 import { CyclesController } from '@controllers/measurement-plans/cycles.controller';
@@ -62,6 +63,7 @@ import { ProjectsModule } from '@modules/projects/projects.module';
     CycleService,
     MeasurementDataService,
     StatusService,
+    MetricCalculationService,
   ],
   exports: [
     MeasurementPlanService,
