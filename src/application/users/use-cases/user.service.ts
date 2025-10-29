@@ -4,6 +4,8 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import {
@@ -82,7 +84,7 @@ export class UserService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto | any): Promise<User> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundException(`User with ID "${id}" not found`);
@@ -106,7 +108,13 @@ export class UserService {
       }
     }
 
-    const updatedUser = await this.userRepository.update(id, updateUserDto);
+    // Hash password if it's being updated
+    let dataToUpdate = { ...updateUserDto };
+    if (updateUserDto.password) {
+      dataToUpdate.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    const updatedUser = await this.userRepository.update(id, dataToUpdate);
 
     if (!updatedUser) {
       throw new NotFoundException(`Failed to update user with ID "${id}"`);
@@ -127,6 +135,92 @@ export class UserService {
     }
 
     return true;
+  }
+
+  /**
+   * Change password with current password verification (secure)
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+
+    // Users with OAuth providers cannot change passwords
+    if (!user.password) {
+      throw new BadRequestException(
+        'Password changes are not available for OAuth accounts',
+      );
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Check new password is different from current
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    const updatedUser = await this.userRepository.update(userId, {
+      password: hashedPassword,
+    });
+
+    if (!updatedUser) {
+      throw new NotFoundException(`Failed to update password for user "${userId}"`);
+    }
+
+    return updatedUser;
+  }
+
+  /**
+   * Reset password without current password verification (admin only)
+   */
+  async resetPassword(
+    adminUserId: string,
+    targetUserId: string,
+    newPassword: string,
+  ): Promise<User> {
+    // Verify admin has permission
+    const admin = await this.userRepository.findById(adminUserId);
+    if (!admin || admin.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only administrators can reset passwords');
+    }
+
+    // Find target user
+    const user = await this.userRepository.findById(targetUserId);
+    if (!user) {
+      throw new NotFoundException(`User with ID "${targetUserId}" not found`);
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    const updatedUser = await this.userRepository.update(targetUserId, {
+      password: hashedPassword,
+    });
+
+    if (!updatedUser) {
+      throw new NotFoundException(
+        `Failed to reset password for user "${targetUserId}"`,
+      );
+    }
+
+    return updatedUser;
   }
 
   async leaveOrganization(userId: string): Promise<void> {
