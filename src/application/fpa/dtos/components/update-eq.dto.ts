@@ -50,6 +50,55 @@ export class UpdateEQDto {
   @Min(1)
   dataElementTypes?: number;
 
+  // Special EQ calculation fields
+  @ApiProperty({
+    description:
+      'Number of File Types Referenced for input parameters (special EQ calculation)',
+    example: 1,
+    minimum: 0,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  inputFtr?: number;
+
+  @ApiProperty({
+    description:
+      'Number of Data Element Types for input parameters (special EQ calculation)',
+    example: 5,
+    minimum: 1,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  inputDet?: number;
+
+  @ApiProperty({
+    description:
+      'Number of File Types Referenced for output data (special EQ calculation)',
+    example: 3,
+    minimum: 0,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  outputFtr?: number;
+
+  @ApiProperty({
+    description:
+      'Number of Data Element Types for output data (special EQ calculation)',
+    example: 12,
+    minimum: 1,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  outputDet?: number;
+
   @ApiProperty({
     description: 'Primary business purpose of this External Query transaction',
     example:
