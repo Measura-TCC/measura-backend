@@ -23,7 +23,7 @@ export class EstimateRepository implements IEstimateRepository {
   }
 
   async findById(id: string): Promise<Estimate | null> {
-    return this.estimateModel.findById(id).lean().exec();
+    return this.estimateModel.findById(id).populate('createdBy', 'firstName lastName username email').lean().exec();
   }
 
   async findByIds(ids: string[]): Promise<Estimate[]> {

@@ -81,3 +81,8 @@ firebase-service-account.json
 .cursor/
 .docs/
 
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

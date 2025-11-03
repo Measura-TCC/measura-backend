@@ -240,23 +240,57 @@ export class EQController {
       // Prepare update data with potential complexity recalculation
       const updateData: Partial<EQ> = { ...eqData };
 
-      // Recalculate complexity if FTRs or DETs changed
-      if (
-        eqData.fileTypesReferenced !== undefined ||
-        eqData.dataElementTypes !== undefined
-      ) {
-        const fileTypesReferenced =
-          eqData.fileTypesReferenced ?? currentEQ.fileTypesReferenced;
-        const dataElementTypes =
-          eqData.dataElementTypes ?? currentEQ.dataElementTypes;
+      // Determine if we need to recalculate complexity
+      const hasSpecialFieldsInUpdate =
+        eqData.inputFtr !== undefined ||
+        eqData.inputDet !== undefined ||
+        eqData.outputFtr !== undefined ||
+        eqData.outputDet !== undefined;
 
-        const { complexity, functionPoints } =
-          ComplexityCalculator.calculateEQComplexity(
-            fileTypesReferenced,
-            dataElementTypes,
+      const hasStandardFieldsInUpdate =
+        eqData.fileTypesReferenced !== undefined ||
+        eqData.dataElementTypes !== undefined;
+
+      // Recalculate complexity if any relevant fields changed
+      if (hasSpecialFieldsInUpdate || hasStandardFieldsInUpdate) {
+        // Get merged values (update + current)
+        const mergedInputFtr = eqData.inputFtr ?? currentEQ.inputFtr;
+        const mergedInputDet = eqData.inputDet ?? currentEQ.inputDet;
+        const mergedOutputFtr = eqData.outputFtr ?? currentEQ.outputFtr;
+        const mergedOutputDet = eqData.outputDet ?? currentEQ.outputDet;
+
+        // Check if we should use special calculation
+        const useSpecialCalculation =
+          mergedInputFtr !== undefined &&
+          mergedInputDet !== undefined &&
+          mergedOutputFtr !== undefined &&
+          mergedOutputDet !== undefined;
+
+        if (useSpecialCalculation) {
+          // Use special EQ calculation
+          const specialResult = ComplexityCalculator.calculateEQSpecialComplexity(
+            mergedInputFtr,
+            mergedInputDet,
+            mergedOutputFtr,
+            mergedOutputDet,
           );
-        updateData.complexity = complexity;
-        updateData.functionPoints = functionPoints;
+          updateData.complexity = specialResult.finalComplexity;
+          updateData.functionPoints = specialResult.finalFunctionPoints;
+        } else {
+          // Use standard calculation
+          const fileTypesReferenced =
+            eqData.fileTypesReferenced ?? currentEQ.fileTypesReferenced;
+          const dataElementTypes =
+            eqData.dataElementTypes ?? currentEQ.dataElementTypes;
+
+          const { complexity, functionPoints } =
+            ComplexityCalculator.calculateEQComplexity(
+              fileTypesReferenced,
+              dataElementTypes,
+            );
+          updateData.complexity = complexity;
+          updateData.functionPoints = functionPoints;
+        }
       }
 
       const updatedEQ = await this.eqRepository.update(id, updateData);

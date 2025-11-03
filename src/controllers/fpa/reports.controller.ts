@@ -18,6 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import { I18nService } from 'nestjs-i18n';
 import { ReportGeneratorService } from '@domain/fpa/services/report-generator.service';
 import {
   ESTIMATE_REPOSITORY,
@@ -56,7 +57,12 @@ export class ReportsController {
     @Inject(ESTIMATE_REPOSITORY)
     private readonly estimateRepository: IEstimateRepository,
     private readonly reportGeneratorService: ReportGeneratorService,
+    private readonly i18n: I18nService,
   ) {}
+
+  private t(key: string, locale: string): string {
+    return this.i18n.t(key, { lang: locale });
+  }
 
   @Get(':id/detailed')
   @ApiOperation({ summary: 'Generate a detailed report for an estimate' })
@@ -66,6 +72,7 @@ export class ReportsController {
     required: false,
     description: 'Report format (json, html, or pdf)',
   })
+  @ApiQuery({ name: 'locale', required: false, description: 'Language code (en or pt)' })
   @ApiResponse({
     status: 200,
     description: 'Detailed report generated successfully',
@@ -74,6 +81,7 @@ export class ReportsController {
   async generateDetailedReport(
     @Param('id') id: string,
     @Query('format') format: string = 'json',
+    @Query('locale') locale: string = 'en',
     @Res() res: Response,
   ) {
     try {
@@ -84,18 +92,18 @@ export class ReportsController {
       }
 
       const report =
-        this.reportGeneratorService.generateDetailedReport(estimate);
+        this.reportGeneratorService.generateDetailedReport(estimate, locale);
 
       if (format === 'html') {
         // Simple HTML formatting for demonstration (in a real app, you'd use a template engine)
-        const html = this.convertToHtml(report);
+        const html = this.convertToHtml(report, locale);
         return res
           .status(HttpStatus.OK)
           .header('Content-Type', 'text/html')
           .send(html);
       } else if (format === 'pdf') {
         // Generate PDF using puppeteer
-        const html = this.convertToHtml(report);
+        const html = this.convertToHtml(report, locale);
         const pdf = await this.generatePdf(html, `Detailed_Report_${id}`);
         return res
           .status(HttpStatus.OK)
@@ -126,6 +134,7 @@ export class ReportsController {
     required: false,
     description: 'Report format (json, html, or pdf)',
   })
+  @ApiQuery({ name: 'locale', required: false, description: 'Language code (en or pt)' })
   @ApiResponse({
     status: 200,
     description: 'Summary report generated successfully',
@@ -134,6 +143,7 @@ export class ReportsController {
   async generateSummaryReport(
     @Param('id') id: string,
     @Query('format') format: string = 'json',
+    @Query('locale') locale: string = 'en',
     @Res() res: Response,
   ) {
     try {
@@ -144,18 +154,18 @@ export class ReportsController {
       }
 
       const report =
-        this.reportGeneratorService.generateSummaryReport(estimate);
+        this.reportGeneratorService.generateSummaryReport(estimate, locale);
 
       if (format === 'html') {
         // Create HTML version of the summary report
-        const html = this.convertSummaryToHtml(report);
+        const html = this.convertSummaryToHtml(report, locale);
         return res
           .status(HttpStatus.OK)
           .header('Content-Type', 'text/html')
           .send(html);
       } else if (format === 'pdf') {
         // Generate PDF using puppeteer
-        const html = this.convertSummaryToHtml(report);
+        const html = this.convertSummaryToHtml(report, locale);
         const pdf = await this.generatePdf(html, `Summary_Report_${id}`);
         return res
           .status(HttpStatus.OK)
@@ -187,6 +197,7 @@ export class ReportsController {
     required: false,
     description: 'Report format (json, html, or pdf)',
   })
+  @ApiQuery({ name: 'locale', required: false, description: 'Language code (en or pt)' })
   @ApiResponse({
     status: 200,
     description: 'Comparison report generated successfully',
@@ -195,6 +206,7 @@ export class ReportsController {
   async generateComparisonReport(
     @Body() dto: GenerateComparisonReportDto,
     @Query('format') format: string = 'json',
+    @Query('locale') locale: string = 'en',
     @Res() res: Response,
   ) {
     try {
@@ -215,18 +227,18 @@ export class ReportsController {
       }
 
       const report =
-        this.reportGeneratorService.generateComparisonReport(estimates);
+        this.reportGeneratorService.generateComparisonReport(estimates, locale);
 
       if (format === 'html') {
         // Create HTML version of the comparison report
-        const html = this.convertComparisonToHtml(report);
+        const html = this.convertComparisonToHtml(report, locale);
         return res
           .status(HttpStatus.OK)
           .header('Content-Type', 'text/html')
           .send(html);
       } else if (format === 'pdf') {
         // Generate PDF using puppeteer
-        const html = this.convertComparisonToHtml(report);
+        const html = this.convertComparisonToHtml(report, locale);
         const pdf = await this.generatePdf(html, `Comparison_Report`);
         return res
           .status(HttpStatus.OK)
@@ -257,11 +269,13 @@ export class ReportsController {
     required: false,
     description: 'Export format (json, csv, or pdf)',
   })
+  @ApiQuery({ name: 'locale', required: false, description: 'Language code (en or pt)' })
   @ApiResponse({ status: 200, description: 'Export generated successfully' })
   @ApiResponse({ status: 404, description: 'Estimate not found' })
   async exportEstimate(
     @Param('id') id: string,
     @Query('format') format: string = 'json',
+    @Query('locale') locale: string = 'en',
     @Res() res: Response,
   ) {
     try {
@@ -281,8 +295,8 @@ export class ReportsController {
         filename = `estimate_${id}_${new Date().toISOString().split('T')[0]}.csv`;
       } else if (format === 'pdf') {
         const report =
-          this.reportGeneratorService.generateDetailedReport(estimate);
-        const html = this.convertToHtml(report);
+          this.reportGeneratorService.generateDetailedReport(estimate, locale);
+        const html = this.convertToHtml(report, locale);
         result = await this.generatePdf(html, `Estimate_${id}`);
         contentType = 'application/pdf';
         filename = `estimate_${id}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -309,7 +323,7 @@ export class ReportsController {
     }
   }
 
-  private convertToHtml(report: DetailedReport): string {
+  private convertToHtml(report: DetailedReport, locale: string): string {
     // A very basic HTML generator for demonstration purposes
     let html = `
       <!DOCTYPE html>
@@ -326,7 +340,7 @@ export class ReportsController {
       </head>
       <body>
         <h1>${report.title}</h1>
-        <p class="date">Date: ${report.date}</p>
+        <p class="date">${this.t('fpa-export.date', locale)}: ${report.date}</p>
         <p>${report.summary}</p>
     `;
 
@@ -359,7 +373,7 @@ export class ReportsController {
     return html;
   }
 
-  private convertSummaryToHtml(report: SummaryReport): string {
+  private convertSummaryToHtml(report: SummaryReport, locale: string): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -377,34 +391,34 @@ export class ReportsController {
       <body>
         <h1>${report.title}</h1>
         <p class="date">Date: ${report.date}</p>
-        
+
         <table>
           <tr>
-            <th>Metric</th>
-            <th>Value</th>
+            <th>${this.t('fpa-export.metric', locale)}</th>
+            <th>${this.t('fpa-export.value', locale)}</th>
           </tr>
           <tr>
-            <td>Total Function Points (Unadjusted)</td>
+            <td>${this.t('fpa-export.totalFunctionPointsUnadjusted', locale)}</td>
             <td>${report.totalFunctionPoints}</td>
           </tr>
           <tr>
-            <td>Adjusted Function Points</td>
+            <td>${this.t('fpa-export.adjustedFunctionPoints', locale)}</td>
             <td>${report.adjustedFunctionPoints}</td>
           </tr>
           <tr>
-            <td>Estimated Effort (hours)</td>
+            <td>${this.t('fpa-export.estimatedEffortHours', locale)}</td>
             <td>${report.estimatedEffort}</td>
           </tr>
           <tr>
-            <td>Recommended Team Size</td>
+            <td>${this.t('fpa-export.recommendedTeamSize', locale)}</td>
             <td>${report.teamSize}</td>
           </tr>
           <tr>
-            <td>Estimated Duration (months)</td>
+            <td>${this.t('fpa-export.estimatedDurationMonths', locale)}</td>
             <td>${report.duration}</td>
           </tr>
           <tr>
-            <td>GSC Score</td>
+            <td>${this.t('fpa-export.gscScore', locale)}</td>
             <td>${report.gscScore}</td>
           </tr>
         </table>
@@ -413,7 +427,7 @@ export class ReportsController {
     `;
   }
 
-  private convertComparisonToHtml(report: ComparisonReport): string {
+  private convertComparisonToHtml(report: ComparisonReport, locale: string): string {
     let estimatesHtml = '';
     report.estimates.forEach((est, index: number) => {
       estimatesHtml += `
@@ -448,24 +462,24 @@ export class ReportsController {
       <body>
         <h1>${report.title}</h1>
         <p class="date">Date: ${report.date}</p>
-        
-        <h2>Comparison Data</h2>
+
+        <h2>${this.t('fpa-export.comparisonData', locale)}</h2>
         <table>
           <tr>
-            <th>Name</th>
-            <th>Version</th>
-            <th>Date</th>
-            <th>Function Points</th>
-            <th>Effort (hours)</th>
-            <th>FP % Change</th>
-            <th>Effort % Change</th>
+            <th>${this.t('fpa-export.name', locale)}</th>
+            <th>${this.t('fpa-export.version', locale)}</th>
+            <th>${this.t('fpa-export.date', locale)}</th>
+            <th>${this.t('fpa-export.functionPoints', locale)}</th>
+            <th>${this.t('fpa-export.effortHours', locale)}</th>
+            <th>${this.t('fpa-export.fpPercentChange', locale)}</th>
+            <th>${this.t('fpa-export.effortPercentChange', locale)}</th>
           </tr>
           ${estimatesHtml}
         </table>
-        
-        <h2>Trend Analysis</h2>
-        <p class="trend">Overall Trend: ${report.trendAnalysis.trend}</p>
-        <p>Percentage Change: ${report.trendAnalysis.percentageChange}%</p>
+
+        <h2>${this.t('fpa-export.trendAnalysis', locale)}</h2>
+        <p class="trend">${this.t('fpa-export.overallTrend', locale)}: ${report.trendAnalysis.trend}</p>
+        <p>${this.t('fpa-export.percentageChange', locale)}: ${report.trendAnalysis.percentageChange}%</p>
       </body>
       </html>
     `;
