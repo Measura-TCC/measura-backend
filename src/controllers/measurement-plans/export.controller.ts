@@ -74,6 +74,7 @@ export class MeasurementPlansExportController {
       organizationId,
       exportDto.format,
       exportDto.options,
+      exportDto.locale,
     );
 
     const downloadUrl = `/files/exports/${filename}`;

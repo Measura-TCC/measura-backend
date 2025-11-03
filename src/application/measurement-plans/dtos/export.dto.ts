@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsOptional, IsBoolean, IsString } from 'class-validator';
 
 export enum ExportFormat {
   PDF = 'pdf',
@@ -44,6 +44,15 @@ export class ExportMeasurementPlanDto {
   @IsNotEmpty({ message: 'Export format is required' })
   @IsEnum(ExportFormat, { message: 'Format must be pdf or docx' })
   format: ExportFormat;
+
+  @ApiProperty({
+    description: 'Language code for export labels (en or pt)',
+    example: 'en',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Locale must be a string' })
+  locale?: string;
 
   @ApiProperty({
     description: 'Export options',

@@ -14,12 +14,16 @@ import {
   TableCell,
   WidthType,
 } from 'docx';
+import { I18nService } from 'nestjs-i18n';
 import { MeasurementPlanService } from './measurement-plan.service';
 import { ExportFormat, ExportOptionsDto } from '../dtos/export.dto';
 
 @Injectable()
 export class ExportService {
-  constructor(private readonly measurementPlanService: MeasurementPlanService) {
+  constructor(
+    private readonly measurementPlanService: MeasurementPlanService,
+    private readonly i18n: I18nService,
+  ) {
     // Ensure exports directory exists
     const exportsDir = path.join(process.cwd(), 'exports');
     if (!fs.existsSync(exportsDir)) {
@@ -32,6 +36,7 @@ export class ExportService {
     organizationId: string,
     format: ExportFormat,
     options?: ExportOptionsDto,
+    locale: string = 'en',
   ): Promise<{ filePath: string; filename: string }> {
     // Get the measurement plan data
     const planData = await this.measurementPlanService.findOne(
@@ -49,10 +54,10 @@ export class ExportService {
 
     switch (format) {
       case ExportFormat.PDF:
-        await this.generatePDF(planData, filePath, options);
+        await this.generatePDF(planData, filePath, options, locale);
         break;
       case ExportFormat.DOCX:
-        await this.generateDOCX(planData, filePath, options);
+        await this.generateDOCX(planData, filePath, options, locale);
         break;
       default:
         throw new Error(`Unsupported export format: ${format}`);
@@ -65,6 +70,7 @@ export class ExportService {
     planData: any,
     filePath: string,
     options?: ExportOptionsDto,
+    locale: string = 'en',
   ): Promise<void> {
     const browser = await puppeteer.launch({
       headless: true,
@@ -75,7 +81,7 @@ export class ExportService {
       const page = await browser.newPage();
 
       // Create HTML template
-      const htmlTemplate = this.createHTMLTemplate(planData, options);
+      const htmlTemplate = this.createHTMLTemplate(planData, options, locale);
 
       await page.setContent(htmlTemplate, { waitUntil: 'networkidle0' });
 
@@ -96,10 +102,15 @@ export class ExportService {
     }
   }
 
+  private t(key: string, locale: string): string {
+    return this.i18n.t(key, { lang: locale });
+  }
+
   private async generateDOCX(
     planData: any,
     filePath: string,
     options?: ExportOptionsDto,
+    locale: string = 'en',
   ): Promise<void> {
     const doc = new Document({
       styles: {
@@ -142,7 +153,7 @@ export class ExportService {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Projeto Associado: `,
+                  text: `${this.t('plans-export.relatedGoal', locale)}: `,
                   bold: true,
                   font: 'Arial',
                   size: 24,
@@ -163,7 +174,7 @@ export class ExportService {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Responsável pelo Plano: `,
+                  text: `${this.t('plans-export.planResponsible', locale)}: `,
                   bold: true,
                   font: 'Arial',
                   size: 24,
@@ -184,7 +195,7 @@ export class ExportService {
             new Paragraph({ text: '' }), // Empty line
 
             // Objectives
-            ...this.createObjectivesContent(planData, options),
+            ...this.createObjectivesContent(planData, options, locale),
           ],
         },
       ],
@@ -197,6 +208,7 @@ export class ExportService {
   private createHTMLTemplate(
     planData: any,
     options?: ExportOptionsDto,
+    locale: string = 'en',
   ): string {
     // Register handlebars helper for index calculations
     handlebars.registerHelper(
@@ -319,55 +331,55 @@ export class ExportService {
     </head>
     <body>
         <div class="header">
-            <div class="plan-info"><strong>Nome do plano:</strong> {{planName}}</div>
-            <div class="plan-info"><strong>Projeto Associado:</strong> {{#if associatedProjectName}}{{associatedProjectName}}{{else}}N/A{{/if}}</div>
-            <div class="plan-info"><strong>Responsável pelo Plano:</strong> {{planResponsible}}</div>
+            <div class="plan-info"><strong>${this.t('plans-export.planName', locale)}</strong> {{planName}}</div>
+            <div class="plan-info"><strong>${this.t('plans-export.relatedGoal', locale)}</strong> {{#if associatedProjectName}}{{associatedProjectName}}{{else}}N/A{{/if}}</div>
+            <div class="plan-info"><strong>${this.t('plans-export.planResponsible', locale)}</strong> {{planResponsible}}</div>
         </div>
 
         <ul>
         {{#each objectives}}
             <li class="objective-container">
-                <div class="objective-title">Objetivo {{add @index 1}}: {{objectiveTitle}}</div>
+                <div class="objective-title">${this.t('plans-export.objective', locale)} {{add @index 1}}: {{objectiveTitle}}</div>
                 {{#if questions}}
                 <ul>
                 {{#each questions}}
                     <li>
-                        <div class="question-title">Questão {{add @index 1}}: {{questionText}}</div>
+                        <div class="question-title">${this.t('plans-export.question', locale)} {{add @index 1}}: {{questionText}}</div>
                         {{#if metrics}}
                         <ul>
                         {{#each metrics}}
                             <li>
-                                <div class="metric-title">Métrica {{add @index 1}}: {{metricName}}</div>
+                                <div class="metric-title">${this.t('plans-export.metric', locale)} {{add @index 1}}: {{metricName}}</div>
                                 <ul>
                                     <li>
-                                        <div class="info-section-title">Informações Gerais:</div>
-                                        <div class="info-item"><strong>Descrição da Métrica:</strong> {{metricDescription}}</div>
-                                        <div class="info-item"><strong>Mnemônico da Métrica:</strong> {{metricMnemonic}}</div>
-                                        <div class="info-item"><strong>Fórmula da Métrica:</strong> {{metricFormula}}</div>
+                                        <div class="info-section-title">${this.t('plans-export.generalInfo', locale)}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.metricDescription', locale)}</strong> {{metricDescription}}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.metricMnemonic', locale)}</strong> {{metricMnemonic}}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.metricFormula', locale)}</strong> {{metricFormula}}</div>
                                     </li>
                                     {{#if ../../../options.includeAnalysis}}
                                     <li>
-                                        <div class="info-section-title">Controle e Análise</div>
-                                        <div class="info-item"><strong>Intervalo de Controle da Métrica:</strong> [{{metricControlRange.[0]}}, {{metricControlRange.[1]}}]</div>
-                                        <div class="info-item"><strong>Procedimento de Análise:</strong> {{analysisProcedure}}</div>
-                                        <div class="info-item"><strong>Frequência de Análise:</strong> {{analysisFrequency}}</div>
+                                        <div class="info-section-title">${this.t('plans-export.controlAnalysis', locale)}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.metricControlRange', locale)}</strong> [{{metricControlRange.[0]}}, {{metricControlRange.[1]}}]</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.analysisProcedure', locale)}</strong> {{analysisProcedure}}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.analysisFrequency', locale)}</strong> {{analysisFrequency}}</div>
                                         {{#if analysisResponsible}}
-                                        <div class="info-item"><strong>Responsável pela Análise:</strong> {{analysisResponsible}}</div>
+                                        <div class="info-item"><strong>${this.t('plans-export.analysisResponsible', locale)}</strong> {{analysisResponsible}}</div>
                                         {{/if}}
                                     </li>
                                     {{/if}}
                                     {{#if ../../../options.includeMeasurements}}
                                     <li>
-                                        <div class="info-section-title">Detalhes da Medida</div>
+                                        <div class="info-section-title">${this.t('plans-export.measurementDetails', locale)}</div>
                                         {{#each measurements}}
-                                        <div class="measurement-title">Medida {{add @index 1}}</div>
-                                        <div class="measurement-info"><strong>Propriedades de Medida:</strong> {{measurementProperties}}</div>
-                                        <div class="measurement-info"><strong>Unidade de Medida:</strong> {{measurementUnit}}</div>
-                                        <div class="measurement-info"><strong>Escala de Medida:</strong> {{measurementScale}}</div>
-                                        <div class="measurement-info"><strong>Procedimento de Medida:</strong> {{measurementProcedure}}</div>
-                                        <div class="measurement-info"><strong>Frequência de Medida:</strong> {{measurementFrequency}}</div>
+                                        <div class="measurement-title">${this.t('plans-export.measurement', locale)} {{add @index 1}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementProperties', locale)}</strong> {{measurementProperties}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementUnit', locale)}</strong> {{measurementUnit}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementScale', locale)}</strong> {{measurementScale}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementProcedure', locale)}</strong> {{measurementProcedure}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementFrequency', locale)}</strong> {{measurementFrequency}}</div>
                                         {{#if measurementResponsible}}
-                                        <div class="measurement-info"><strong>Responsável pela Medida:</strong> {{measurementResponsible}}</div>
+                                        <div class="measurement-info"><strong>${this.t('plans-export.measurementResponsible', locale)}</strong> {{measurementResponsible}}</div>
                                         {{/if}}
                                         {{/each}}
                                     </li>
@@ -433,6 +445,7 @@ export class ExportService {
   private createObjectivesContent(
     planData: any,
     options?: ExportOptionsDto,
+    locale: string = 'en',
   ): Paragraph[] {
     const content: Paragraph[] = [];
 
@@ -442,7 +455,7 @@ export class ExportService {
           new Paragraph({
             children: [
               new TextRun({
-                text: `Objetivo ${objIndex + 1}: ${objective.objectiveTitle}`,
+                text: `${this.t('plans-export.objective', locale)} ${objIndex + 1}: ${objective.objectiveTitle}`,
                 bold: true,
                 font: 'Arial',
                 size: 28, // 14pt
@@ -463,7 +476,7 @@ export class ExportService {
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: `- Questão ${qIndex + 1}: ${question.questionText}`,
+                    text: `- ${this.t('plans-export.question', locale)} ${qIndex + 1}: ${question.questionText}`,
                     size: 26, // 13pt
                     bold: true,
                     font: 'Arial',
@@ -486,7 +499,7 @@ export class ExportService {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: `- Métrica ${mIndex + 1}: ${metric.metricName}`,
+                        text: `- ${this.t('plans-export.metric', locale)} ${mIndex + 1}: ${metric.metricName}`,
                         size: 26, // 13pt
                         bold: true,
                         font: 'Arial',
@@ -508,7 +521,7 @@ export class ExportService {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: 'Informações Gerais:',
+                        text: this.t('plans-export.generalInfo', locale),
                         size: 24,
                         bold: true,
                         font: 'Arial',
@@ -530,7 +543,7 @@ export class ExportService {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: `Descrição da Métrica: `,
+                        text: `${this.t('plans-export.metricDescription', locale)} `,
                         size: 24,
                         bold: true,
                         font: 'Arial',
@@ -557,7 +570,7 @@ export class ExportService {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: `Mnemônico da Métrica: `,
+                        text: `${this.t('plans-export.metricMnemonic', locale)} `,
                         size: 24,
                         bold: true,
                         font: 'Arial',
@@ -584,7 +597,7 @@ export class ExportService {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: `Fórmula da Métrica: `,
+                        text: `${this.t('plans-export.metricFormula', locale)} `,
                         size: 24,
                         bold: true,
                         font: 'Arial',
@@ -613,7 +626,7 @@ export class ExportService {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: 'Controle e Análise',
+                          text: this.t('plans-export.controlAnalysis', locale),
                           size: 24,
                           bold: true,
                           font: 'Arial',
@@ -635,7 +648,7 @@ export class ExportService {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: `Intervalo de Controle da Métrica: `,
+                          text: `${this.t('plans-export.metricControlRange', locale)} `,
                           size: 24,
                           bold: true,
                           font: 'Arial',
@@ -662,7 +675,7 @@ export class ExportService {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: `Procedimento de Análise: `,
+                          text: `${this.t('plans-export.analysisProcedure', locale)} `,
                           size: 24,
                           bold: true,
                           font: 'Arial',
@@ -689,7 +702,7 @@ export class ExportService {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: `Frequência de Análise: `,
+                          text: `${this.t('plans-export.analysisFrequency', locale)} `,
                           size: 24,
                           bold: true,
                           font: 'Arial',
@@ -717,7 +730,7 @@ export class ExportService {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: `Responsável pela Análise: `,
+                            text: `${this.t('plans-export.analysisResponsible', locale)} `,
                             size: 24,
                             bold: true,
                             font: 'Arial',
@@ -748,7 +761,7 @@ export class ExportService {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: 'Detalhes da Medida',
+                          text: this.t('plans-export.measurementDetails', locale),
                           size: 24,
                           bold: true,
                           font: 'Arial',
@@ -772,7 +785,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Medida ${measIndex + 1}`,
+                              text: `${this.t('plans-export.measurement', locale)} ${measIndex + 1}`,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -794,7 +807,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Propriedades de Medida: `,
+                              text: `${this.t('plans-export.measurementProperties', locale)} `,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -821,7 +834,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Unidade de Medida: `,
+                              text: `${this.t('plans-export.measurementUnit', locale)} `,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -848,7 +861,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Escala de Medida: `,
+                              text: `${this.t('plans-export.measurementScale', locale)} `,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -875,7 +888,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Procedimento de Medida: `,
+                              text: `${this.t('plans-export.measurementProcedure', locale)} `,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -902,7 +915,7 @@ export class ExportService {
                         new Paragraph({
                           children: [
                             new TextRun({
-                              text: `Frequência de Medida: `,
+                              text: `${this.t('plans-export.measurementFrequency', locale)} `,
                               size: 24,
                               bold: true,
                               font: 'Arial',
@@ -930,7 +943,7 @@ export class ExportService {
                           new Paragraph({
                             children: [
                               new TextRun({
-                                text: `Responsável pela Medida: `,
+                                text: `${this.t('plans-export.measurementResponsible', locale)} `,
                                 size: 24,
                                 bold: true,
                                 font: 'Arial',

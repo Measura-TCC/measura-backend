@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Estimate } from '@domain/fpa/entities/estimate.entity';
 import { FunctionPointCalculator } from '@domain/fpa/services/function-point-calculator.service';
 import { TeamSizeEstimationService } from '@domain/fpa/services/team-size-estimation.service';
@@ -57,16 +58,79 @@ export class ReportGeneratorService {
     private readonly functionPointCalculator: FunctionPointCalculator,
     private readonly teamSizeEstimationService: TeamSizeEstimationService,
     private readonly trendAnalysisService: TrendAnalysisService,
+    private readonly i18n: I18nService,
   ) {}
 
-  generateDetailedReport(estimate: Estimate): DetailedReport {
-    // Get GSC factors from the calculator - use static method
-    const gscFactors = FunctionPointCalculator.getGSCFactors();
+  private t(key: string, locale: string): string {
+    return this.i18n.t(key, { lang: locale });
+  }
 
-    // Prepare detailed GSC section
-    const gscDetails = gscFactors.map((factor, index) => {
+  // Format date based on locale
+  private formatDate(date: Date, locale: string): string {
+    if (locale === 'pt') {
+      // Brazilian format: DD/MM/YYYY
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    // Default format: YYYY-MM-DD
+    return date.toISOString().split('T')[0];
+  }
+
+  // Get creator name from populated or unpopulated createdBy field
+  private getCreatorName(createdBy: any): string {
+    if (createdBy && typeof createdBy === 'object') {
+      // Try firstName + lastName
+      if (createdBy.firstName || createdBy.lastName) {
+        return `${createdBy.firstName || ''} ${createdBy.lastName || ''}`.trim();
+      }
+      // Fall back to username
+      if (createdBy.username) {
+        return createdBy.username;
+      }
+      // Fall back to email
+      if (createdBy.email) {
+        return createdBy.email;
+      }
+      // If it's an ObjectId object
+      if (createdBy._id) {
+        return createdBy._id.toString();
+      }
+    }
+    // If it's just an ObjectId string
+    if (typeof createdBy === 'string' || createdBy?.toString) {
+      return createdBy.toString();
+    }
+    return 'Unknown';
+  }
+
+  // GSC translation key mapping (in order of GSC array)
+  private readonly GSC_KEYS = [
+    'dataCommunications',
+    'distributedDataProcessing',
+    'performance',
+    'heavilyUsedConfiguration',
+    'transactionRate',
+    'onlineDataEntry',
+    'endUserEfficiency',
+    'onlineUpdate',
+    'complexProcessing',
+    'reusability',
+    'installationEase',
+    'operationalEase',
+    'multipleSites',
+    'facilitateChange',
+  ];
+
+
+  generateDetailedReport(estimate: Estimate, locale: string = 'en'): DetailedReport {
+    // Prepare detailed GSC section with translations
+    const gscDetails = this.GSC_KEYS.map((key, index) => {
       const gscValue = estimate.generalSystemCharacteristics?.[index] || 0;
-      return `${factor.name} (${factor.id}): ${gscValue} - ${factor.description}`;
+      const name = this.t(`fpa-export.gsc.${key}`, locale);
+      const description = this.t(`fpa-export.gsc.${key}Desc`, locale);
+      return `${name} (${index + 1}): ${gscValue} - ${description}`;
     });
 
     // Calculate team size estimates
@@ -78,31 +142,34 @@ export class ReportGeneratorService {
 
     // Format function point counts by component type
     const functionPointsBreakdown = [
-      `Internal Logical Files (ILF): ${estimate.internalLogicalFiles.length} components`,
-      `External Interface Files (EIF): ${estimate.externalInterfaceFiles.length} components`,
-      `External Inputs (EI): ${estimate.externalInputs.length} components`,
-      `External Outputs (EO): ${estimate.externalOutputs.length} components`,
-      `External Queries (EQ): ${estimate.externalQueries.length} components`,
+      `${this.t('fpa-export.internalLogicalFiles', locale)}: ${estimate.internalLogicalFiles.length} ${this.t('fpa-export.components', locale)}`,
+      `${this.t('fpa-export.externalInterfaceFiles', locale)}: ${estimate.externalInterfaceFiles.length} ${this.t('fpa-export.components', locale)}`,
+      `${this.t('fpa-export.externalInputs', locale)}: ${estimate.externalInputs.length} ${this.t('fpa-export.components', locale)}`,
+      `${this.t('fpa-export.externalOutputs', locale)}: ${estimate.externalOutputs.length} ${this.t('fpa-export.components', locale)}`,
+      `${this.t('fpa-export.externalQueries', locale)}: ${estimate.externalQueries.length} ${this.t('fpa-export.components', locale)}`,
     ];
 
+    // Calculate GSC total for formulas
+    const gscTotal = estimate.generalSystemCharacteristics?.reduce((sum, val) => sum + val, 0) || 0;
+
     return {
-      title: `Detailed Function Point Analysis Report: ${estimate.name}`,
-      date: estimate.updatedAt.toISOString().split('T')[0],
+      title: `${this.t('fpa-export.detailedReportTitle', locale)}: ${estimate.name}`,
+      date: this.formatDate(estimate.updatedAt, locale),
       summary: estimate.description,
       sections: [
         {
-          title: 'Project Information',
+          title: this.t('fpa-export.projectInformation', locale),
           content: [
-            `Project ID: ${estimate.projectId.toString()}`,
-            `Status: ${estimate.status}`,
-            `Version: ${estimate.version}`,
-            `Created By: ${estimate.createdBy.toString()}`,
+            `${this.t('fpa-export.projectId', locale)}: ${estimate.projectId.toString()}`,
+            `${this.t('fpa-export.status', locale)}: ${estimate.status}`,
+            `${this.t('fpa-export.version', locale)}: ${estimate.version}`,
+            `${this.t('fpa-export.createdBy', locale)}: ${this.getCreatorName(estimate.createdBy)}`,
           ],
         },
         {
-          title: 'Function Point Counts',
+          title: this.t('fpa-export.functionPointCounts', locale),
           content: [
-            `Total Component Count: ${
+            `${this.t('fpa-export.totalComponentCount', locale)}: ${
               estimate.internalLogicalFiles.length +
               estimate.externalInterfaceFiles.length +
               estimate.externalInputs.length +
@@ -110,44 +177,77 @@ export class ReportGeneratorService {
               estimate.externalQueries.length
             }`,
             ...functionPointsBreakdown,
-            `Unadjusted Function Points: ${estimate.unadjustedFunctionPoints}`,
-            `Value Adjustment Factor: ${estimate.valueAdjustmentFactor.toFixed(2)}`,
-            `Adjusted Function Points: ${estimate.adjustedFunctionPoints}`,
+            `${this.t('fpa-export.unadjustedFunctionPoints', locale)}: ${estimate.unadjustedFunctionPoints}`,
+            `${this.t('fpa-export.valueAdjustmentFactor', locale)}: ${estimate.valueAdjustmentFactor.toFixed(2)}`,
+            `${this.t('fpa-export.adjustedFunctionPoints', locale)}: ${estimate.adjustedFunctionPoints}`,
           ],
         },
         {
-          title: 'General System Characteristics',
+          title: this.t('fpa-export.generalSystemCharacteristics', locale),
           content: gscDetails,
         },
         {
-          title: 'Effort Estimation',
+          title: this.t('fpa-export.calculationDetails', locale),
           content: [
-            `Productivity Factor: ${estimate.productivityFactor} hours per function point`,
-            `Estimated Effort: ${estimate.estimatedEffortHours} person-hours`,
-            `Estimated Effort: ${(estimate.estimatedEffortHours / 8).toFixed(1)} person-days`,
-            `Estimated Effort: ${(estimate.estimatedEffortHours / 8 / 21).toFixed(1)} person-months`,
+            `${this.t('fpa-export.ufpCalculation', locale)}:`,
+            `${this.t('fpa-export.ufpFormula', locale)}`,
+            `${estimate.unadjustedFunctionPoints} PF`,
+            '',
+            `${this.t('fpa-export.vafCalculation', locale)}:`,
+            `${this.t('fpa-export.vafFormula', locale)}`,
+            `VAF = 0.65 + (0.01 × ${gscTotal}) = ${estimate.valueAdjustmentFactor.toFixed(2)}`,
+            '',
+            `${this.t('fpa-export.afpCalculation', locale)}:`,
+            `${this.t('fpa-export.afpFormula', locale)}`,
+            `AFP = ${estimate.unadjustedFunctionPoints} × ${estimate.valueAdjustmentFactor.toFixed(2)} = ${estimate.adjustedFunctionPoints}`,
+            '',
+            `${this.t('fpa-export.effortCalculation', locale)}:`,
+            `${this.t('fpa-export.effortFormula', locale)}`,
+            `${estimate.estimatedEffortHours} ${this.t('fpa-export.personHours', locale)} = ${estimate.adjustedFunctionPoints} × ${estimate.productivityFactor}`,
+            ...(estimate.hourlyRateBRL ? [
+              '',
+              `${this.t('fpa-export.costCalculation', locale)}:`,
+              `${this.t('fpa-export.costFormula', locale)}`,
+              `R$ ${(estimate.estimatedEffortHours * estimate.hourlyRateBRL).toFixed(2)} = ${estimate.estimatedEffortHours} × R$ ${estimate.hourlyRateBRL.toFixed(2)}`,
+            ] : []),
           ],
         },
         {
-          title: 'Team Size and Duration Estimation',
+          title: this.t('fpa-export.effortEstimation', locale),
           content: [
-            `Recommended Team Size: ${teamSizeEstimation.recommendedTeamSize} people`,
-            `Recommended Duration: ${teamSizeEstimation.recommendedDurationMonths.toFixed(1)} months`,
-            `Minimum Team Size: ${teamSizeEstimation.minTeamSize} people`,
-            `Maximum Team Size: ${teamSizeEstimation.maxTeamSize} people`,
-            `Minimum Duration: ${teamSizeEstimation.minDurationMonths.toFixed(1)} months`,
-            `Maximum Duration: ${teamSizeEstimation.maxDurationMonths.toFixed(1)} months`,
+            `${this.t('fpa-export.productivityFactor', locale)}: ${estimate.productivityFactor} ${this.t('fpa-export.hoursPerFunctionPoint', locale)}`,
+            `${this.t('fpa-export.estimatedEffort', locale)}: ${estimate.estimatedEffortHours} ${this.t('fpa-export.personHours', locale)}`,
+            `${this.t('fpa-export.estimatedEffort', locale)}: ${(estimate.estimatedEffortHours / 8).toFixed(1)} ${this.t('fpa-export.personDays', locale)}`,
+            `${this.t('fpa-export.estimatedEffort', locale)}: ${(estimate.estimatedEffortHours / 8 / 21).toFixed(1)} ${this.t('fpa-export.personMonths', locale)}`,
+          ],
+        },
+        ...(estimate.hourlyRateBRL ? [{
+          title: this.t('fpa-export.costEstimation', locale),
+          content: [
+            `${this.t('fpa-export.hourlyRate', locale)}: R$ ${estimate.hourlyRateBRL.toFixed(2)}`,
+            `${this.t('fpa-export.estimatedCost', locale)}: R$ ${(estimate.estimatedEffortHours * estimate.hourlyRateBRL).toFixed(2)}`,
+          ],
+        }] : []),
+        {
+          title: this.t('fpa-export.teamSizeAndDuration', locale),
+          content: [
+            `${this.t('fpa-export.recommendedTeamSize', locale)}: ${teamSizeEstimation.recommendedTeamSize} ${this.t('fpa-export.people', locale)}`,
+            `${this.t('fpa-export.recommendedDuration', locale)}: ${teamSizeEstimation.recommendedDurationMonths.toFixed(1)} ${this.t('fpa-export.months', locale)}`,
+            `${this.t('fpa-export.minTeamSize', locale)}: ${teamSizeEstimation.minTeamSize} ${this.t('fpa-export.people', locale)}`,
+            `${this.t('fpa-export.maxTeamSize', locale)}: ${teamSizeEstimation.maxTeamSize} ${this.t('fpa-export.people', locale)}`,
+            `${this.t('fpa-export.minDuration', locale)}: ${teamSizeEstimation.minDurationMonths.toFixed(1)} ${this.t('fpa-export.months', locale)}`,
+            `${this.t('fpa-export.maxDuration', locale)}: ${teamSizeEstimation.maxDurationMonths.toFixed(1)} ${this.t('fpa-export.months', locale)}`,
           ],
         },
         {
-          title: 'Additional Notes',
-          content: estimate.notes || 'No additional notes provided',
+          title: this.t('fpa-export.additionalNotes', locale),
+          content: estimate.notes || this.t('fpa-export.noAdditionalNotes', locale),
         },
       ],
     };
   }
 
-  generateSummaryReport(estimate: Estimate): SummaryReport {
+  generateSummaryReport(estimate: Estimate, locale: string = 'en'): SummaryReport {
     const gscTotal =
       estimate.generalSystemCharacteristics?.reduce(
         (sum, val) => sum + val,
@@ -155,7 +255,7 @@ export class ReportGeneratorService {
       ) || 0;
 
     return {
-      title: `Function Point Analysis Summary: ${estimate.name}`,
+      title: `${this.t('fpa-export.summaryReportTitle', locale)}: ${estimate.name}`,
       totalFunctionPoints: estimate.unadjustedFunctionPoints,
       adjustedFunctionPoints: estimate.adjustedFunctionPoints,
       estimatedEffort: estimate.estimatedEffortHours,
@@ -170,11 +270,11 @@ export class ReportGeneratorService {
         hoursPerDayPerPerson: 6,
       }).recommendedDurationMonths,
       gscScore: gscTotal,
-      date: estimate.updatedAt.toISOString().split('T')[0],
+      date: this.formatDate(estimate.updatedAt, locale),
     };
   }
 
-  generateComparisonReport(estimates: Estimate[]): ComparisonReport {
+  generateComparisonReport(estimates: Estimate[], locale: string = 'en'): ComparisonReport {
     if (!estimates || estimates.length < 2) {
       throw new Error('At least two estimates are required for comparison');
     }
@@ -189,7 +289,7 @@ export class ReportGeneratorService {
       id: est._id.toString(),
       name: est.name,
       version: est.version,
-      date: est.updatedAt.toISOString().split('T')[0],
+      date: this.formatDate(est.updatedAt, locale),
       functionPoints: est.adjustedFunctionPoints,
       effort: est.estimatedEffortHours,
     }));
@@ -225,8 +325,8 @@ export class ReportGeneratorService {
     );
 
     return {
-      title: `Estimate Comparison Report: ${sortedEstimates[0].name}`,
-      date: new Date().toISOString().split('T')[0],
+      title: `${this.t('fpa-export.comparisonReportTitle', locale)}: ${sortedEstimates[0].name}`,
+      date: this.formatDate(new Date(), locale),
       estimates: estimatesData,
       percentageDifferences,
       trendAnalysis: {

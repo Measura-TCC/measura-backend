@@ -6,6 +6,9 @@ import { WinstonModule } from 'nest-winston';
 import { AppController } from './app.controller';
 import { FilesController } from '@controllers/files/files.controller';
 
+// i18n Module
+import { I18nConfigModule } from './i18n/i18n.module';
+
 // Business Logic Modules
 import { AuthModule } from '@app/modules/auth/auth.module';
 import { ProjectsModule } from '@app/modules/projects/projects.module';
@@ -51,6 +54,9 @@ import { Organization, OrganizationSchema } from '@domain/organizations/entities
     ]),
 
     WinstonModule.forRoot(winstonConfig),
+
+    // i18n Module
+    I18nConfigModule,
 
     // Business Logic Modules
     AuthModule,
