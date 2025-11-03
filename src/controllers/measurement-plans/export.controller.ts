@@ -75,6 +75,7 @@ export class MeasurementPlansExportController {
       exportDto.format,
       exportDto.options,
       exportDto.locale,
+      exportDto.chartImages,
     );
 
     const downloadUrl = `/files/exports/${filename}`;

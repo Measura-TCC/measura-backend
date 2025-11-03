@@ -66,4 +66,131 @@ export class MeasurementCycleRepository {
       cycleId: new Types.ObjectId(cycleId),
     });
   }
+
+  async getMeasurementDataByPlanId(planId: string): Promise<any[]> {
+    return this.cycleModel
+      .aggregate([
+        {
+          $match: { planId: new Types.ObjectId(planId) },
+        },
+        {
+          $lookup: {
+            from: 'measurementdata',
+            localField: '_id',
+            foreignField: 'cycleId',
+            as: 'measurements',
+          },
+        },
+        {
+          $unwind: {
+            path: '$measurements',
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+        {
+          $lookup: {
+            from: 'measurementplans',
+            localField: 'planId',
+            foreignField: '_id',
+            as: 'plan',
+          },
+        },
+        {
+          $unwind: '$plan',
+        },
+        {
+          $addFields: {
+            metricInfo: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: {
+                      $reduce: {
+                        input: '$plan.objectives',
+                        initialValue: [],
+                        in: {
+                          $concatArrays: [
+                            '$$value',
+                            {
+                              $reduce: {
+                                input: '$$this.questions',
+                                initialValue: [],
+                                in: { $concatArrays: ['$$value', '$$this.metrics'] },
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    cond: { $eq: ['$$this._id', '$measurements.metricId'] },
+                  },
+                },
+                0,
+              ],
+            },
+            measurementDef: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: {
+                      $reduce: {
+                        input: '$plan.objectives',
+                        initialValue: [],
+                        in: {
+                          $concatArrays: [
+                            '$$value',
+                            {
+                              $reduce: {
+                                input: '$$this.questions',
+                                initialValue: [],
+                                in: {
+                                  $concatArrays: [
+                                    '$$value',
+                                    {
+                                      $reduce: {
+                                        input: '$$this.metrics',
+                                        initialValue: [],
+                                        in: { $concatArrays: ['$$value', '$$this.measurements'] },
+                                      },
+                                    },
+                                  ],
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    cond: { $eq: ['$$this._id', '$measurements.measurementDefinitionId'] },
+                  },
+                },
+                0,
+              ],
+            },
+          },
+        },
+        {
+          $project: {
+            metricId: '$measurements.metricId',
+            metricName: '$metricInfo.metricName',
+            metricMnemonic: '$metricInfo.metricMnemonic',
+            value: '$measurements.value',
+            unit: '$measurementDef.measurementUnit',
+            collectedAt: '$measurements.date',
+            cycleId: '$_id',
+            cycleName: '$cycleName',
+          },
+        },
+        {
+          $sort: { collectedAt: 1 },
+        },
+      ])
+      .exec();
+  }
+
+  async getCalculationsByPlanId(planId: string): Promise<any[]> {
+    // This uses the MetricCalculationService to compute values on-demand
+    // Returns empty for now - will be populated by service layer
+    return [];
+  }
 }
